@@ -1,3 +1,81 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'user_list/user_list.dart';
+import 'camera/camera.dart';
+
+class HomePage extends StatefulWidget {
+  HomePage({Key key}) : super(key: key);
+
+  @override
+  HomePageState createState() => HomePageState();
+}
+
+class HomePageState extends State<HomePage> {
+  int selectedIndex = 0;
+  final widgetOptions = [
+    new UserListPage(),
+    new CameraWidget(),
+    // Text('Swee Profile'),
+    // Text('Add User'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Swee App'),
+      ),
+      body: Center(
+        child: widgetOptions.elementAt(selectedIndex),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('Home')),
+          // BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('Profile')),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.add_a_photo), title: Text('New User')),
+          ],
+        currentIndex: selectedIndex,
+        fixedColor: Colors.deepPurple,
+        onTap: onItemTapped,
+      ),
+    );
+  }
+
+  void onItemTapped(int index) {
+    setState(() {
+      selectedIndex = index;
+    });
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // import 'dart:io';
 
 // import 'package:flutter/material.dart';
