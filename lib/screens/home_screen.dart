@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'user_list/user_list.dart';
 import 'camera/camera.dart';
 import 'imageselector/image_selector.dart';
+import 'video/video.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -17,6 +18,7 @@ class HomePageState extends State<HomePage> {
     new UserListPage(),
     new CameraWidget(),
     new ImageSelector(),
+    new VideoPlayerScreen(),
     // Text('Swee Profile'),
     // Text('Add User'),
   ];
@@ -36,6 +38,7 @@ class HomePageState extends State<HomePage> {
           // BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('Profile')),
           BottomNavigationBarItem(
               icon: Icon(Icons.add_a_photo), title: Text('New User')),
+          BottomNavigationBarItem(icon: Icon(Icons.videocam), title: Text('Video')),
           ],
         currentIndex: selectedIndex,
         fixedColor: Colors.deepPurple,
