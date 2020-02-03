@@ -3,17 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
-void main() => runApp(VideoPlayer());
-
-class VideoPlayer extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Video Player Demo',
-      home: VideoPlayerScreen(),
-    );
-  }
-}
 
 class VideoPlayerScreen extends StatefulWidget {
   VideoPlayerScreen({Key key}) : super(key: key);
@@ -52,11 +41,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: Drawer(),
-      backgroundColor: Colors.orangeAccent,
-      appBar: AppBar(
-        title: Text('Bee Video'),
-        backgroundColor: Colors.black87,
-      ),
+      backgroundColor: Colors.purpleAccent,
+      // appBar: AppBar(
+      //   title: Text('Golf Video'),
+      //   backgroundColor: Colors.black87,
+      // ),
       // Use a FutureBuilder to display a loading spinner while waiting for the
       // VideoPlayerController to finish initializing.
       body: Stack(

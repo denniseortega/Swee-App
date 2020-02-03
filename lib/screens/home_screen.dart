@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'user_list/user_list.dart';
-import 'camera/camera.dart';
+// import 'camera/camera.dart';
 import 'imageselector/image_selector.dart';
 import 'video/video.dart';
 
@@ -16,7 +16,7 @@ class HomePageState extends State<HomePage> {
   int selectedIndex = 0;
   final widgetOptions = [
     new UserListPage(),
-    new CameraWidget(),
+    // new CameraWidget(),
     new ImageSelector(),
     new VideoPlayerScreen(),
     // Text('Swee Profile'),
