@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/user.dart';
 
+final _user = User(); // Moved this out here, which allows the user info to persist when navigating between screens
+
 class UserForm extends StatefulWidget {
   @override
   _UserFormState createState() => _UserFormState();
@@ -8,8 +10,7 @@ class UserForm extends StatefulWidget {
 
 class _UserFormState extends State<UserForm> {
   final _formKey = GlobalKey<FormState>();
-  final _user = User();
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,6 +48,7 @@ class _UserFormState extends State<UserForm> {
                                     }
                                   },
                                   child: Text('Save'))),
+                        Text("This is the value saved to _user: " + _user.firstName),
                         ])))));
   }
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'user_info/user_info.dart';
+// import 'user_info/user_info.dart';
 import 'user_info/user_form.dart';
 // import 'camera/camera.dart';
 import 'imageselector/image_selector.dart';
@@ -16,7 +16,7 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   int selectedIndex = 0;
   final widgetOptions = [
-    new UserInfoPage(),
+    // new UserInfoPage(),
     new UserForm(),
     // new CameraWidget(),
     new ImageSelector(),
@@ -35,12 +35,14 @@ class HomePageState extends State<HomePage> {
         child: widgetOptions.elementAt(selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('Home')),
           BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('New User')),
           // BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('Profile')),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.add_a_photo), title: Text('Upload Photo')),
+          // BottomNavigationBarItem(
+          //     icon: Icon(Icons.add_a_photo), title: Text('Upload Photo')),
           BottomNavigationBarItem(icon: Icon(Icons.videocam), title: Text('Video')),
           ],
         currentIndex: selectedIndex,

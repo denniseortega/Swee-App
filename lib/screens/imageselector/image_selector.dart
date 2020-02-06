@@ -1,8 +1,8 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+File _pickedImage; // Moved this out here, which allows the selected image to persist when navigating between screens
 
 class ImageSelector extends StatefulWidget {
 
@@ -12,7 +12,7 @@ class ImageSelector extends StatefulWidget {
 
 class _ImageSelector extends State<ImageSelector> {
 
-  File _pickedImage;
+  // File _pickedImage; // Moved the variable declaration outside of the class, see top of file
 
   void _pickImage() async {
     final imageSource = await showDialog<ImageSource>(
@@ -45,12 +45,23 @@ class _ImageSelector extends State<ImageSelector> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Image Picker"),
+        title: Text("Profile Image Selector"),
       ),
-      body: Center(
-        child: _pickedImage == null ?
-        Text("Nothing to show") :
-        Image(image: FileImage(_pickedImage)),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget> [
+          Center(
+            child: _pickedImage == null ?
+            Text("Select an image") :
+            Image(image: FileImage(_pickedImage),height: 250,),
+          ),
+          SizedBox(height: 25),
+          Center(
+            child: _pickedImage == null ?
+            Text("") : Text("File path: " + _pickedImage.path, textAlign: TextAlign.center,),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _pickImage,
