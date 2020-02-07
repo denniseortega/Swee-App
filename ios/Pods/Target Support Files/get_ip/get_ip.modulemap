@@ -1,0 +1,6 @@
+framework module get_ip {
+  umbrella header "get_ip-umbrella.h"
+
+  export *
+  module * { export * }
+}
