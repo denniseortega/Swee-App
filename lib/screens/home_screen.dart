@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-// import 'user_info/user_info.dart';
 import 'user_info/user_form.dart';
 // import 'camera/camera.dart';
 import 'imageselector/image_selector.dart';
 import 'video/video.dart';
+import 'connectivity/wifi_dev.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -16,13 +16,10 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   int selectedIndex = 0;
   final widgetOptions = [
-    // new UserInfoPage(),
     new UserForm(),
-    // new CameraWidget(),
     new ImageSelector(),
     new VideoPlayerScreen(),
-    // Text('Swee Profile'),
-    // Text('Add User'),
+    new WifiDev(),
   ];
 
   @override
@@ -40,10 +37,8 @@ class HomePageState extends State<HomePage> {
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('Home')),
           BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('New User')),
-          // BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('Profile')),
-          // BottomNavigationBarItem(
-          //     icon: Icon(Icons.add_a_photo), title: Text('Upload Photo')),
           BottomNavigationBarItem(icon: Icon(Icons.videocam), title: Text('Video')),
+          BottomNavigationBarItem(icon: Icon(Icons.network_wifi), title: Text('WifiDev')),
           ],
         currentIndex: selectedIndex,
         fixedColor: Colors.deepPurple,
