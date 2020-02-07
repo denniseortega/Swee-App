@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import '../../main.dart';
 
-File _pickedImage; // Moved this out here, which allows the selected image to persist when navigating between screens
+File _pickedImage; // Leave this here so it persists when you switch between screens
 
 class ImageSelector extends StatefulWidget {
 
@@ -11,9 +13,6 @@ class ImageSelector extends StatefulWidget {
 }
 
 class _ImageSelector extends State<ImageSelector> {
-
-  // File _pickedImage; // Moved the variable declaration outside of the class, see top of file
-
   void _pickImage() async {
     final imageSource = await showDialog<ImageSource>(
         context: context,
@@ -36,7 +35,10 @@ class _ImageSelector extends State<ImageSelector> {
     if(imageSource != null) {
       final file = await ImagePicker.pickImage(source: imageSource);
       if(file != null) {
-        setState(() => _pickedImage = file);
+        setState(() {
+          _pickedImage = file;
+          Provider.of<SweeUser>(context,listen:false).addImagePath(_pickedImage.path);
+        });
       }
     }
   }
@@ -59,7 +61,7 @@ class _ImageSelector extends State<ImageSelector> {
           SizedBox(height: 25),
           Center(
             child: _pickedImage == null ?
-            Text("") : Text("File path: " + _pickedImage.path, textAlign: TextAlign.center,),
+            Text("") : Consumer<SweeUser>(builder:(context,sweeuser,child)=>Text("This is the value saved to SweeUser.imagePaths: ${sweeuser.imagePaths}", textAlign: TextAlign.center,)),
           ),
         ],
       ),
@@ -70,3 +72,112 @@ class _ImageSelector extends State<ImageSelector> {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'dart:async';
+
+// import 'package:multi_image_picker/multi_image_picker.dart';
+
+// void main() => runApp(new MyApp());
+
+// class ImageSelector extends StatefulWidget {
+
+//   @override
+//   _ImageSelector createState() => _ImageSelector();
+// }
+
+// class _ImageSelector extends State<ImageSelector> {
+//   List<Asset> images = List<Asset>();
+//   String _error = 'No Error Dectected';
+
+//   @override
+//   void initState() {
+//     super.initState();
+//   }
+
+//   Widget buildGridView() {
+//     return GridView.count(
+//       crossAxisCount: 3,
+//       children: List.generate(images.length, (index) {
+//         Asset asset = images[index];
+//         return AssetThumb(
+//           asset: asset,
+//           width: 300,
+//           height: 300,
+//         );
+//       }),
+//     );
+//   }
+
+//   Future<void> loadAssets() async {
+//     List<Asset> resultList = List<Asset>();
+//     String error = 'No Error Dectected';
+
+//     try {
+//       resultList = await MultiImagePicker.pickImages(
+//         maxImages: 300,
+//         enableCamera: true,
+//         selectedAssets: images,
+//         cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
+//         materialOptions: MaterialOptions(
+//           actionBarColor: "#abcdef",
+//           actionBarTitle: "Example App",
+//           allViewTitle: "All Photos",
+//           useDetailsView: false,
+//           selectCircleStrokeColor: "#000000",
+//         ),
+//       );
+//     } on Exception catch (e) {
+//       error = e.toString();
+//     }
+
+//     // If the widget was removed from the tree while the asynchronous platform
+//     // message was in flight, we want to discard the reply rather than calling
+//     // setState to update our non-existent appearance.
+//     if (!mounted) return;
+
+//     setState(() {
+//       images = resultList;
+//       _error = error;
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return new MaterialApp(
+//       home: new Scaffold(
+//         appBar: new AppBar(
+//           title: const Text('Plugin example app'),
+//         ),
+//         body: Column(
+//           children: <Widget>[
+//             Center(child: Text('Error: $_error')),
+//             RaisedButton(
+//               child: Text("Pick images"),
+//               onPressed: loadAssets,
+//             ),
+//             Expanded(
+//               child: buildGridView(),
+//             )
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }

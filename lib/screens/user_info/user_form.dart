@@ -1,5 +1,8 @@
+// import 'dart:ffi';
 import 'package:flutter/material.dart';
 import '../../models/user.dart';
+import 'package:provider/provider.dart';
+import '../../main.dart';
 
 final _user = User(); // Moved this out here, which allows the user info to persist when navigating between screens
 
@@ -10,7 +13,7 @@ class UserForm extends StatefulWidget {
 
 class _UserFormState extends State<UserForm> {
   final _formKey = GlobalKey<FormState>();
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,6 +34,7 @@ class _UserFormState extends State<UserForm> {
                               if (value.isEmpty) {
                                 return 'Please enter your first name';
                               }
+                              return null;
                             },
                             onSaved: (val) =>
                                 setState(() => _user.firstName = val),
@@ -44,11 +48,15 @@ class _UserFormState extends State<UserForm> {
                                     if (form.validate()) {
                                       form.save();
                                       _user.save();
+                                      Provider.of<SweeUser>(context,listen:false).setUsername(_user.firstName);
                                       _showDialog(context);
                                     }
                                   },
                                   child: Text('Save'))),
-                        Text("This is the value saved to _user: " + _user.firstName),
+                          // Text("This is the value saved to _user: " + _user.firstName),
+                          Consumer<SweeUser>(
+                            builder: (context,sweeuser,child) => Text('This is the value saved to SweeUser.username: ${sweeuser.username}'),
+                          )
                         ])))));
   }
 
