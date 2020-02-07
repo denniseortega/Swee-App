@@ -1,9 +1,51 @@
 import 'package:flutter/material.dart';
-import 'app.dart';
+import 'package:provider/provider.dart';
+import 'screens/home_screen.dart';
 
-void main() => runApp(MyApp());
 
+void main() {
+  runApp(
+    // User a provider to provide variables across widgets
+    ChangeNotifierProvider(
+      create: (context) => SweeUser(),
+      child: MyApp(),
+    ),
+    );
+}
 
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        title: 'Swee',
+        theme: ThemeData(
+          primarySwatch: Colors.green,
+        ),
+        home: HomePage());
+  }
+}
+
+// Define a "User" class that can be consumed by all of the MyApp's child widgets
+class SweeUser with ChangeNotifier {
+  String username = 'Default User Name';
+  String deviceIP = 'Default.Device.IP';
+  List<String> imagePaths = [];
+
+  void setUsername(name) {
+    username = name;
+    notifyListeners();
+  }
+
+  void setDeviceIP(ip) {
+    deviceIP = ip;
+    notifyListeners();
+  }
+
+  void addImagePath(path) {
+    imagePaths.add(path);
+    notifyListeners();
+  }
+}
 
 
 
