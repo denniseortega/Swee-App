@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 
-
 void main() {
   runApp(
     // User a provider to provide variables across widgets
@@ -25,7 +24,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Define a "User" class that can be consumed by all of the MyApp's child widgets
+// Define a "SweeUser" class that can be consumed by all of the MyApp's child widgets
 class SweeUser with ChangeNotifier {
   String username = 'Default User Name';
   String deviceIP = 'Default.Device.IP';
