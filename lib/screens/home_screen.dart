@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'user_info/user_form.dart';
-// import 'camera/camera.dart';
 import 'imageselector/image_selector.dart';
 import 'video/video.dart';
 import 'connectivity/wifi_dev.dart';
@@ -33,15 +32,15 @@ class HomePageState extends State<HomePage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.blue[800],
         items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), title: Text('Home')),
+          BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('Home')),
           BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('New User')),
           BottomNavigationBarItem(icon: Icon(Icons.videocam), title: Text('Video')),
           BottomNavigationBarItem(icon: Icon(Icons.network_wifi), title: Text('WifiDev')),
           ],
         currentIndex: selectedIndex,
-        fixedColor: Colors.deepPurple,
+        fixedColor: Colors.deepPurple[300],
         onTap: onItemTapped,
       ),
     );

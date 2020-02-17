@@ -37,7 +37,7 @@ class _ImageSelector extends State<ImageSelector> {
       if(file != null) {
         setState(() {
           _pickedImage = file;
-          Provider.of<SweeUser>(context,listen:false).addImagePath(_pickedImage.path);
+          // Provider.of<SweeUser>(context,listen:false).addImagePath(_pickedImage.path);
         });
       }
     }
@@ -54,14 +54,15 @@ class _ImageSelector extends State<ImageSelector> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget> [
           Center(
-            child: _pickedImage == null ?
-            Text("Select an image") :
-            Image(image: FileImage(_pickedImage),height: 250,),
-          ),
-          SizedBox(height: 25),
-          Center(
-            child: _pickedImage == null ?
-            Text("") : Consumer<SweeUser>(builder:(context,sweeuser,child)=>Text("This is the value saved to SweeUser.imagePaths: ${sweeuser.imagePaths}", textAlign: TextAlign.center,)),
+            child: Consumer<SweeUser>(builder:(context,sweeuser,child)=>Text("This is the value saved to SweeUser.imagePaths: ${sweeuser.imagePaths}", textAlign: TextAlign.center,))
+          //   child: _pickedImage == null ?
+          //   Text("Select an image") :
+          //   Image(image: FileImage(_pickedImage),height: 250,),
+          // ),
+          // SizedBox(height: 25),
+          // Center(
+          //   child: _pickedImage == null ?
+          //   Text("") : Consumer<SweeUser>(builder:(context,sweeuser,child)=>Text("This is the value saved to SweeUser.imagePaths: ${sweeuser.imagePaths}", textAlign: TextAlign.center,)),
           ),
         ],
       ),

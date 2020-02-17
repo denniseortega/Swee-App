@@ -18,7 +18,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
         title: 'Swee',
         theme: ThemeData(
-          primarySwatch: Colors.green,
+          brightness: Brightness.dark,
+          primaryColor: Colors.blue[800],
+          accentColor: Colors.cyan[600],
+
+          //Default font family
+          fontFamily: 'Roboto'
         ),
         home: HomePage());
   }
@@ -28,7 +33,8 @@ class MyApp extends StatelessWidget {
 class SweeUser with ChangeNotifier {
   String username = 'Default User Name';
   String deviceIP = 'Default.Device.IP';
-  List<String> imagePaths = [];
+  List<String> imagePaths = List.filled(3,'');//[];
+  bool isRegistered = false;
 
   void setUsername(name) {
     username = name;
@@ -40,8 +46,13 @@ class SweeUser with ChangeNotifier {
     notifyListeners();
   }
 
-  void addImagePath(path) {
-    imagePaths.add(path);
+  void addImagePath(index,path) {
+    imagePaths[index-1]=path;
+    notifyListeners();
+  }
+
+  void setRegistration(registrationStatus) {
+    isRegistered = registrationStatus;
     notifyListeners();
   }
 }

@@ -246,12 +246,15 @@ class WifiDevState extends State<WifiDev> {
       //     log('${addr.address} ${addr.host} ${addr.isLoopback} ${addr.rawAddress} ${addr.type.name}');
       //   }
       // }
-      registerUser(Provider.of<SweeUser>(context,listen:false).username,
+      await registerUser(Provider.of<SweeUser>(context,listen:false).username,
         Provider.of<SweeUser>(context,listen:false).deviceIP,
         Provider.of<SweeUser>(context,listen:false).imagePaths,
       );
+      bool registrationStatus = true; // TODO: have registerUser return a true or false based on success
+      Provider.of<SweeUser>(context,listen:false).setRegistration(registrationStatus);
 
-
+      var regstat = Provider.of<SweeUser>(context,listen:false).isRegistered;
+      log('User is registered? $regstat');
 
 
         break;
@@ -349,16 +352,29 @@ Future<void> registerUser(String username, String deviceIP, List<String> filePat
   // Create user
   await createUser(username,deviceIP);
 
-  if (filePaths.isNotEmpty) {
+  // Create a new, temporary, list without any empty "file paths"
+  var filePathsTemp = new List<String>();
+  for (String fp in filePathsTemp) {
+    if (fp.isNotEmpty) {
+      filePathsTemp.add(fp);
+    }
+  }
+
+  // Upload profile images to server, and image information to the database
+  if (filePathsTemp.isNotEmpty) {
     // Upload profile images to server
     await uploadImageToServer(username,filePaths);
 
     // Upload image info to database
     await uploadImageToDB(username,filePaths);
   }
+  else{
+    log('No profile images to upload.');
+  }
 
   // Join a session
   await joinSession(username);
+
 
   log('$username ($deviceIP) successfully registered!');
 }
