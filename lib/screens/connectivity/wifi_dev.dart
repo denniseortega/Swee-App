@@ -12,6 +12,7 @@ import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../../main.dart';
 import 'dart:developer';
+import 'package:flutter_downloader/flutter_downloader.dart';
 
 String _mainNodeIP = '192.168.4.1:5001';//'127.0.0.1:5001'; // TODO: make this part of SweeUser?
 // String _secondaryNodeIP = 'NaN.NaN.NaN.NaN';
@@ -49,7 +50,7 @@ class WifiDevState extends State<WifiDev> {
     // post = fetchPost();
     _connectivitySubscription =
         _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
-    // _timer = Timer.periodic(Duration(seconds: 30), (Timer t) => checkForNewVideos());
+    _timer = Timer.periodic(Duration(seconds: 10), (Timer t) => checkForNewVideos(Provider.of<SweeUser>(context,listen:false).username,Provider.of<SweeUser>(context,listen:false).videoPaths));
   }
 
   @override
@@ -59,45 +60,45 @@ class WifiDevState extends State<WifiDev> {
     super.dispose();
   }
 
-  void checkForNewVideos() async {
+  void checkForNewVideos(String username,List videoPaths) async {
     _counter++;
     log('video check: $_counter');
+    log('username: $username');
+    log('current video paths:');
+    for (String fp in videoPaths) {
+      if (fp.isNotEmpty) {
+        log('$fp');
+      }
+      else {log('[]');}
+    }
 
 
     try {
       // final response = await http.get('https://jsonplaceholder.typicode.com/posts/1');
-      var uri = Uri.parse('http://$_mainNodeIP/users');
+      var uri = Uri.http('$_mainNodeIP','/user/video',{'username':username});
       log('$uri');
       var response = await http.get(uri);
       if (response.statusCode==200) {
-        log('response: /users');
+        log('response: /users/video');
         log(response.body);
+        VideoResponse VR = VideoResponse.fromJson(json.decode(response.body));
+        List videoPaths_server = VR.filePaths;
+        for (String vp in videoPaths_server) {
+          log('$vp');
+
+          // TODO: compare against sweeuser.videoPaths
+          // TODO: check out flutter downloader to download video
+          
+        }
+
       }
       else {
-        log('no response: /users');
+        log('no response: /user/video');
       }
       }
     catch (_) {
       log('oh no');
       }
-
-
-    try {
-      var username = Provider.of<SweeUser>(context,listen:false).username;
-      var uri = Uri.parse('http://$_mainNodeIP/user/video');
-
-      var response = await http.post(uri,body:{'username':username});
-      if (response.statusCode==200) {
-        log('response: /user/video');
-        log(response.body);
-      }
-      else {
-        log('no response: /user/video');
-      }
-    }
-    catch (_) {
-      log('nope!');
-    }
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -354,19 +355,20 @@ Future<void> registerUser(String username, String deviceIP, List<String> filePat
 
   // Create a new, temporary, list without any empty "file paths"
   var filePathsTemp = new List<String>();
-  for (String fp in filePathsTemp) {
+  for (String fp in filePaths) {
     if (fp.isNotEmpty) {
       filePathsTemp.add(fp);
     }
   }
 
+
   // Upload profile images to server, and image information to the database
   if (filePathsTemp.isNotEmpty) {
     // Upload profile images to server
-    await uploadImageToServer(username,filePaths);
+    await uploadImageToServer(username,filePathsTemp);
 
     // Upload image info to database
-    await uploadImageToDB(username,filePaths);
+    await uploadImageToDB(username,filePathsTemp);
   }
   else{
     log('No profile images to upload.');
@@ -400,7 +402,7 @@ Future<void> uploadImageToServer(String username, List<String> filePaths) async 
       request.fields['username'] = username;
       request.files.add(await http.MultipartFile.fromPath('file', fp));
       var response = await request.send();
-      if (response.statusCode != 500) log('Uploaded image(s) to server!');
+      if (response.statusCode != 500) log('Uploaded image to server: $fp');
     }
   }
   catch (_) {
@@ -431,5 +433,15 @@ Future<void> joinSession(String username) async {
   }
   catch (_) {
     log('Error in joinSession');
+  }
+}
+
+class VideoResponse {
+  final List filePaths;
+
+  VideoResponse({this.filePaths});
+
+  factory VideoResponse.fromJson(Map<String,dynamic> json) {
+    return VideoResponse(filePaths: json['file_paths']);
   }
 }

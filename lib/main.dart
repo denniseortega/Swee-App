@@ -35,6 +35,7 @@ class SweeUser with ChangeNotifier {
   String deviceIP = 'Default.Device.IP';
   List<String> imagePaths = List.filled(3,'');//[];
   bool isRegistered = false;
+  var videoPaths = List();
 
   void setUsername(name) {
     username = name;
@@ -48,6 +49,11 @@ class SweeUser with ChangeNotifier {
 
   void addImagePath(index,path) {
     imagePaths[index-1]=path;
+    notifyListeners();
+  }
+
+  void addVideoPath(path) {
+    videoPaths.add(path);
     notifyListeners();
   }
 

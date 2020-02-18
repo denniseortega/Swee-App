@@ -64,6 +64,9 @@ class _ImageSelector extends State<ImageSelector> {
           //   child: _pickedImage == null ?
           //   Text("") : Consumer<SweeUser>(builder:(context,sweeuser,child)=>Text("This is the value saved to SweeUser.imagePaths: ${sweeuser.imagePaths}", textAlign: TextAlign.center,)),
           ),
+          Center(
+            child: Consumer<SweeUser>(builder:(context,sweeuser,child)=>Text("This is the value saved to SweeUser.videoPaths: ${sweeuser.videoPaths}", textAlign: TextAlign.center,))
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
