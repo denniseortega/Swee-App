@@ -1,9 +1,9 @@
 ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES
-FRAMEWORK_SEARCH_PATHS = $(inherited) "${PODS_CONFIGURATION_BUILD_DIR}/camera" "${PODS_CONFIGURATION_BUILD_DIR}/get_ip" "${PODS_CONFIGURATION_BUILD_DIR}/image_picker" "${PODS_CONFIGURATION_BUILD_DIR}/video_player" "${PODS_ROOT}/../.symlinks/flutter/ios"
+FRAMEWORK_SEARCH_PATHS = $(inherited) "${PODS_CONFIGURATION_BUILD_DIR}/Reachability" "${PODS_CONFIGURATION_BUILD_DIR}/camera" "${PODS_CONFIGURATION_BUILD_DIR}/connectivity" "${PODS_CONFIGURATION_BUILD_DIR}/flutter_downloader" "${PODS_CONFIGURATION_BUILD_DIR}/get_ip" "${PODS_CONFIGURATION_BUILD_DIR}/image_picker" "${PODS_CONFIGURATION_BUILD_DIR}/video_player" "${PODS_ROOT}/../.symlinks/flutter/ios"
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1
-HEADER_SEARCH_PATHS = $(inherited) "${PODS_CONFIGURATION_BUILD_DIR}/camera/camera.framework/Headers" "${PODS_CONFIGURATION_BUILD_DIR}/get_ip/get_ip.framework/Headers" "${PODS_CONFIGURATION_BUILD_DIR}/image_picker/image_picker.framework/Headers" "${PODS_CONFIGURATION_BUILD_DIR}/video_player/video_player.framework/Headers"
+HEADER_SEARCH_PATHS = $(inherited) "${PODS_CONFIGURATION_BUILD_DIR}/Reachability/Reachability.framework/Headers" "${PODS_CONFIGURATION_BUILD_DIR}/camera/camera.framework/Headers" "${PODS_CONFIGURATION_BUILD_DIR}/connectivity/connectivity.framework/Headers" "${PODS_CONFIGURATION_BUILD_DIR}/flutter_downloader/flutter_downloader.framework/Headers" "${PODS_CONFIGURATION_BUILD_DIR}/get_ip/get_ip.framework/Headers" "${PODS_CONFIGURATION_BUILD_DIR}/image_picker/image_picker.framework/Headers" "${PODS_CONFIGURATION_BUILD_DIR}/video_player/video_player.framework/Headers"
 LD_RUNPATH_SEARCH_PATHS = $(inherited) '@executable_path/Frameworks' '@loader_path/Frameworks'
-OTHER_LDFLAGS = $(inherited) -framework "Flutter" -framework "camera" -framework "get_ip" -framework "image_picker" -framework "video_player"
+OTHER_LDFLAGS = $(inherited) -l"sqlite3" -framework "Flutter" -framework "Reachability" -framework "SystemConfiguration" -framework "camera" -framework "connectivity" -framework "flutter_downloader" -framework "get_ip" -framework "image_picker" -framework "video_player"
 OTHER_SWIFT_FLAGS = $(inherited) -D COCOAPODS
 PODS_BUILD_DIR = ${BUILD_DIR}
 PODS_CONFIGURATION_BUILD_DIR = ${PODS_BUILD_DIR}/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)

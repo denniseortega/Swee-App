@@ -162,21 +162,30 @@ strip_invalid_archs() {
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${PODS_ROOT}/../.symlinks/flutter/ios/Flutter.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/camera/camera.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/connectivity/connectivity.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/flutter_downloader/flutter_downloader.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/get_ip/get_ip.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/image_picker/image_picker.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/video_player/video_player.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${PODS_ROOT}/../.symlinks/flutter/ios/Flutter.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/camera/camera.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/connectivity/connectivity.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/flutter_downloader/flutter_downloader.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/get_ip/get_ip.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/image_picker/image_picker.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/video_player/video_player.framework"
 fi
 if [[ "$CONFIGURATION" == "Profile" ]]; then
   install_framework "${PODS_ROOT}/../.symlinks/flutter/ios/Flutter.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/camera/camera.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/connectivity/connectivity.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/flutter_downloader/flutter_downloader.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/get_ip/get_ip.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/image_picker/image_picker.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/video_player/video_player.framework"

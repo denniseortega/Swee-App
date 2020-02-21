@@ -1,0 +1,32 @@
+{
+  "name": "flutter_downloader",
+  "version": "0.0.1",
+  "summary": "A plugin to create and manage bankground download tasks",
+  "description": "A plugin to create and manage bankground download tasks",
+  "homepage": "https://github.com/hnvn/flutter_downloader",
+  "license": {
+    "file": "../LICENSE"
+  },
+  "authors": {
+    "HungHD": "hunghd.yb@gmail.com"
+  },
+  "source": {
+    "path": "."
+  },
+  "source_files": "Classes/**/*",
+  "public_header_files": "Classes/**/*.h",
+  "dependencies": {
+    "Flutter": [
+
+    ]
+  },
+  "ios": {
+    "libraries": "sqlite3",
+    "resource_bundles": {
+      "FlutterDownloaderDatabase": "Assets/download_tasks.sql"
+    }
+  },
+  "platforms": {
+    "ios": "8.0"
+  }
+}

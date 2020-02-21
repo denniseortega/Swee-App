@@ -31,14 +31,19 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Can I use the camera please?</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Can I use the mic please?</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Can I use the photo library please?</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Can I use the device location please?</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Can I use the device location please?</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Can I use the mic please?</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Can I use the photo library please?</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -58,5 +63,14 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+    <!-- THE NEXT 3 KEYS ARE FOR FLUTTER_DOWNLOADER -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key><true/>
+    </dict>
+    <key>FDMaximumConcurrentTasks</key>
+    <integer>5</integer>
+    <key>FDAllFilesDownloadedMessage</key>
+    <string>All files have been downloaded</string>
 </dict>
 </plist>
