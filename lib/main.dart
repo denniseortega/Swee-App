@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 
-void main() {
+void main() async {
+  // Ensure FlutterDownloader is initialized
+  WidgetsFlutterBinding.ensureInitialized();
+  // await FlutterDownloader.initialize(); TODO: This doesn't seem to work with hot reload... but it seems to work fine through Runner?!
+
   runApp(
     // User a provider to provide variables across widgets
     ChangeNotifierProvider(
@@ -12,7 +17,7 @@ void main() {
     );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatelessWidget with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -35,6 +40,7 @@ class SweeUser with ChangeNotifier {
   String deviceIP = 'Default.Device.IP';
   List<String> imagePaths = List.filled(3,'');//[];
   bool isRegistered = false;
+  bool flutterDownloaderInitialized = false;
   var videoPaths = List();
 
   void setUsername(name) {
@@ -59,6 +65,11 @@ class SweeUser with ChangeNotifier {
 
   void setRegistration(registrationStatus) {
     isRegistered = registrationStatus;
+    notifyListeners();
+  }
+
+  void setFlutterDownloaderInitialized(initStatus) {
+    flutterDownloaderInitialized = initStatus;
     notifyListeners();
   }
 }

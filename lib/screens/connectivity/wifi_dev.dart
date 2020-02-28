@@ -13,6 +13,8 @@ import 'package:provider/provider.dart';
 import '../../main.dart';
 import 'dart:developer';
 import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 String _mainNodeIP = '192.168.4.1:5001';//'127.0.0.1:5001'; // TODO: make this part of SweeUser?
 // String _secondaryNodeIP = 'NaN.NaN.NaN.NaN';
@@ -28,12 +30,14 @@ class WifiDevState extends State<WifiDev> {
   int selectedIndex = 0;
   List<String> _imagePaths = ['phone/folder/path1','phone/folder/path2','phone/folder/path3'];
   String _connectionStatus = 'Unknown';
+  String _wifiName = 'Unknown';
   bool _profileUploaded = false;
   Future<Post> post;
   Timer _timer;
   int _counter = 0;
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  String _lastTaskId;
 
   final widgetOptions = [
 //    new UserListPage(),
@@ -50,6 +54,7 @@ class WifiDevState extends State<WifiDev> {
     // post = fetchPost();
     _connectivitySubscription =
         _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+    initFlutterDownloader();
     _timer = Timer.periodic(Duration(seconds: 10), (Timer t) => checkForNewVideos(Provider.of<SweeUser>(context,listen:false).username,Provider.of<SweeUser>(context,listen:false).videoPaths));
   }
 
@@ -59,8 +64,17 @@ class WifiDevState extends State<WifiDev> {
     _timer?.cancel();
     super.dispose();
   }
-
+  void initFlutterDownloader() async {
+    // Make sure FlutterDownloader is only initialized once
+    if (!Provider.of<SweeUser>(context,listen:false).flutterDownloaderInitialized) {
+      await FlutterDownloader.initialize();
+      Provider.of<SweeUser>(context,listen:false).setFlutterDownloaderInitialized(true);
+    }
+  }
   void checkForNewVideos(String username,List videoPaths) async {
+    if (_wifiName=='swee') {
+
+    
     _counter++;
     log('video check: $_counter');
     log('username: $username');
@@ -81,16 +95,29 @@ class WifiDevState extends State<WifiDev> {
       if (response.statusCode==200) {
         log('response: /users/video');
         log(response.body);
-        VideoResponse VR = VideoResponse.fromJson(json.decode(response.body));
-        List videoPaths_server = VR.filePaths;
-        for (String vp in videoPaths_server) {
+        VideoResponse videoResponse = VideoResponse.fromJson(json.decode(response.body));
+        List videoPathsOnServer = videoResponse.filePaths;
+        for (String vp in videoPathsOnServer) {
           log('$vp');
 
-          // TODO: compare against sweeuser.videoPaths
-          // TODO: check out flutter downloader to download video
-          
+          if (videoPaths.contains(vp)) {
+            log('$vp already exists in SweeUser.videoPaths');
+          }
+          else {
+            // Add vp to SweeUser.videoPaths, and download the video
+            Provider.of<SweeUser>(context,listen:false).addVideoPath(vp);
+            log('$vp added to SweeUser.videoPaths');
+            // var uriDownload = Uri.http('$_mainNodeIP','/user/video',{'username':username});
+            String filename = path.basename(vp);
+            log('$filename');
+            var uriDownload = Uri.http('$_mainNodeIP','/downloads/$username/$filename');
+            final taskId = await FlutterDownloader.enqueue(url: uriDownload.toString(), savedDir: await _localPath);
+            setState(() {
+              _lastTaskId = taskId;
+            });
+            log('Task $taskId successfully downloaded!');
+          }
         }
-
       }
       else {
         log('no response: /user/video');
@@ -99,6 +126,13 @@ class WifiDevState extends State<WifiDev> {
     catch (_) {
       log('oh no');
       }
+    }
+  }
+
+  Future<String> get _localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+
+    return directory.path;
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -149,6 +183,13 @@ class WifiDevState extends State<WifiDev> {
           builder: (context,sweeuser,child) =>Text('SweeUser.deviceIP: ${sweeuser.deviceIP}'),
         ),
         SizedBox(height:25),
+        IconButton(
+          icon: Icon(Icons.videocam),
+          onPressed:(){
+            return FlutterDownloader.open(taskId: _lastTaskId);
+          }
+        ),
+        Text('Last download task ID: $_lastTaskId')
         // Center(child: FutureBuilder<Post>(
         //   future: post,
         //   builder: (context, snapshot) {
@@ -235,6 +276,7 @@ class WifiDevState extends State<WifiDev> {
               'Wifi BSSID: $wifiBSSID\n'
               'Wifi IP: $wifiIP';
         });
+        setState((){_wifiName='$wifiName';});
 
         if (_profileUploaded) {
           _uploadProfile(result.toString());
@@ -262,18 +304,21 @@ class WifiDevState extends State<WifiDev> {
       case ConnectivityResult.mobile:
         log('Connection: Mobile Detected');
         setState(() => _connectionStatus = result.toString());
+        setState(() {_wifiName='N/A';});
         setState((){_profileUploaded = false;});
         _uploadProfile(result.toString());
         break;
       case ConnectivityResult.none:
         log('Connection: None Detected');
         setState(() => _connectionStatus = result.toString());
+        setState(() {_wifiName='N/A';});
         setState((){_profileUploaded = false;});
         _uploadProfile(result.toString());
         break;
       default:
         log('Connection: Failed to Get Connectivity');
         setState(() => _connectionStatus = 'Failed to get connectivity.');
+        setState(() {_wifiName='N/A';});
         setState((){_profileUploaded = false;});
         _uploadProfile(result.toString());
         break;
