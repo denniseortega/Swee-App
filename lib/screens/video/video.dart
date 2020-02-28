@@ -2,7 +2,24 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
+List<StaggeredTile> _staggeredTiles = const <StaggeredTile>[
+  const StaggeredTile.count(2, 2),
+  const StaggeredTile.count(2, 1),
+  const StaggeredTile.count(1, 2),
+  const StaggeredTile.count(1, 1),
+  const StaggeredTile.count(2, 2),
+  const StaggeredTile.count(1, 2),
+  const StaggeredTile.count(1, 1),
+  const StaggeredTile.count(3, 1),
+  const StaggeredTile.count(1, 1),
+  const StaggeredTile.count(4, 1),
+];
+
+List<Widget> _tiles = const <Widget>[
+
+];
 
 class VideoPlayerScreen extends StatefulWidget {
   VideoPlayerScreen({Key key}) : super(key: key);
@@ -94,6 +111,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                     child: Icon(
                       _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
                       size: 120.0,
+                    
+                      child: new StaggeredGridView.count(
+                        crossAxisCount: 4,
+                        staggeredTiles: _staggeredTiles,
+                        children: _tiles,
+                        mainAxisSpacing: 4.0,
+                        crossAxisSpacing: 4.0,
+                        padding: const EdgeInsets.all(4.0),
+                      ),
                     ),
                   ))
           )
