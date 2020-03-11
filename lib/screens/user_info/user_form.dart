@@ -22,113 +22,32 @@ class _UserFormState extends State<UserForm> {
   final _formKey = GlobalKey<FormState>();
 
   @override
-  void initState() {
-    _initSharedPreferences(); // TODO: revamp with FutureBuilder, see https://stackoverflow.com/questions/49930180/flutter-render-widget-after-async-call
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Profile')),
-      body: Container(
-        padding:
-          const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-        child: Builder(
-          builder: (context) => Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextFormField(
-                  initialValue: _user.firstName,
-                  decoration:
-                    InputDecoration(labelText: 'First name'),
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'Please enter your first name';
-                    }
-                    return null;
-                  },
-                  onSaved: (val) =>
-                    setState(() => _user.firstName = val),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16.0, horizontal: 16.0),
-                  child: RaisedButton(
-                    onPressed: () {
-                      final form = _formKey.currentState;
-                      if (form.validate()) {
-                        form.save();
-                        _user.save();
-                        // Provider.of<SweeUser>(context,listen:false).setUsername(_user.firstName);
-                        _saveSharedPreferences();
-                        _showDialog(context);
-                      }
-                    },
-                    child: Text('Save')
-                  )
-                ),
-                Consumer<SweeUser>(
-                  builder: (context,sweeuser,child) => Text('This is the value saved to SweeUser.username: ${sweeuser.username}'),
-                ),
-                SizedBox(height:50),
-                AppBar(title: Text('Upload 3 Selfies')),
-                SizedBox(height:50),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget> [
-                        Center(
-                          child: _pickedImage1 == null ?
-                          FloatingActionButton(
-                            onPressed: (){_pickImage(1);},
-                            child: Icon(Icons.image),
-                          ) :
-                          Image(image: FileImage(_pickedImage1),height: _imageSize,),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget> [
-                        Center(
-                          child: _pickedImage2 == null ?
-                          FloatingActionButton(
-                            onPressed: (){_pickImage(2);},
-                            child: Icon(Icons.image),
-                          ) :
-                          Image(image: FileImage(_pickedImage2),height: _imageSize,),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget> [
-                        Center(
-                          child: _pickedImage3 == null ?
-                          FloatingActionButton(
-                            onPressed: (){_pickImage(3);},
-                            child: Icon(Icons.image),
-                          ) :
-                          Image(image: FileImage(_pickedImage3),height: _imageSize,),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ]
-            )
-          )
-        )
-      )
+    return FutureBuilder<String>(
+      future: _initSharedPreferences(),
+      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+        String _lastUsername;
+
+        switch (snapshot.connectionState) {
+          case ConnectionState.none: 
+            log('none');
+            return new Text('ConnectionState.none');//_returnScaffold(""); // Return the page Scaffold but with nothing in the form
+          case ConnectionState.waiting:
+            log('waiting');
+            return _returnScaffold("");
+          default:
+            if (snapshot.hasData) {
+              log('hasData');
+              _lastUsername = snapshot.data;
+              log('_lastUsername = $_lastUsername');
+              return _returnScaffold(_lastUsername);
+            }
+            else {
+              log('NOT hasData');
+              return _returnScaffold("");
+            }
+        }
+      }
     );
   }
 
@@ -139,21 +58,21 @@ class _UserFormState extends State<UserForm> {
 
   void _pickImage(int _pickedImageNum) async {
     final imageSource = await showDialog<ImageSource>(
-        context: context,
-        builder: (context) =>
-            AlertDialog(
-              title: Text("Select the image source"),
-              actions: <Widget>[
-                MaterialButton(
-                  child: Text("Camera"),
-                  onPressed: () => Navigator.pop(context, ImageSource.camera),
-                ),
-                MaterialButton(
-                  child: Text("Gallery"),
-                  onPressed: () => Navigator.pop(context, ImageSource.gallery),
-                )
-              ],
+      context: context,
+      builder: (context) =>
+        AlertDialog(
+          title: Text("Select the image source"),
+          actions: <Widget>[
+            MaterialButton(
+              child: Text("Camera"),
+              onPressed: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            MaterialButton(
+              child: Text("Gallery"),
+              onPressed: () => Navigator.pop(context, ImageSource.gallery),
             )
+          ],
+        )
     );
 
     if(imageSource != null) {
@@ -193,13 +112,118 @@ class _UserFormState extends State<UserForm> {
     }
   }
 
-  _initSharedPreferences() async {
+  Scaffold _returnScaffold(String lastUsername) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Profile')),
+        body: Container(
+          padding:
+            const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+          child: Builder(
+            builder: (context) => Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextFormField(
+                    initialValue: lastUsername,
+                    decoration:
+                      InputDecoration(labelText: 'First name'),
+                    validator: (value) {
+                      if (value.isEmpty) {
+                        return 'Please enter your first name';
+                      }
+                      return null;
+                    },
+                    onSaved: (val) =>
+                      setState(() => _user.firstName = val),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16.0, horizontal: 16.0),
+                    child: RaisedButton(
+                      onPressed: () {
+                        final form = _formKey.currentState;
+                        if (form.validate()) {
+                          form.save();
+                          _user.save();
+                          // Provider.of<SweeUser>(context,listen:false).setUsername(_user.firstName);
+                          _saveSharedPreferences();
+                          _showDialog(context);
+                        }
+                      },
+                      child: Text('Save')
+                    )
+                  ),
+                  Consumer<SweeUser>(
+                    builder: (context,sweeuser,child) => Text('This is the value saved to SweeUser.username: ${sweeuser.username}'),
+                  ),
+                  SizedBox(height:50),
+                  AppBar(title: Text('Upload 3 Selfies')),
+                  SizedBox(height:50),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget> [
+                          Center(
+                            child: _pickedImage1 == null ?
+                            FloatingActionButton(
+                              onPressed: (){_pickImage(1);},
+                              child: Icon(Icons.image),
+                            ) :
+                            Image(image: FileImage(_pickedImage1),height: _imageSize,),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget> [
+                          Center(
+                            child: _pickedImage2 == null ?
+                            FloatingActionButton(
+                              onPressed: (){_pickImage(2);},
+                              child: Icon(Icons.image),
+                            ) :
+                            Image(image: FileImage(_pickedImage2),height: _imageSize,),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget> [
+                          Center(
+                            child: _pickedImage3 == null ?
+                            FloatingActionButton(
+                              onPressed: (){_pickImage(3);},
+                              child: Icon(Icons.image),
+                            ) :
+                            Image(image: FileImage(_pickedImage3),height: _imageSize,),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ]
+              )
+            )
+          )
+        )
+      );
+    }
+
+  Future<String> _initSharedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final key = 'username';
     final value = prefs.getString(key) ?? 'Default User Name';
     _user.firstName = value; // Set the local variable
     Provider.of<SweeUser>(context,listen:false).setUsername(_user.firstName); // Set SweeUser (shared across multiple screens)
     log('read: $value');
+    return value;
   }
 
   _saveSharedPreferences() async {
