@@ -8,10 +8,9 @@ import 'dart:developer';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final _user = User(); // Moved this out here, which allows the user info to persist when navigating between screens
-File _pickedImage1; // Leave this here so it persists when you switch between screens
-File _pickedImage2;
-File _pickedImage3; // IF YOU CHANGE THE NUMBER OF IMAGES, DON'T FORGET TO UPDATE THE "IMAGEPATHS" LIST INTIALIZATION IN MAIN/SWEEUSER()
 double _imageSize = 175;
+int _nImages = 3;
+List<File> _pickedImages = List<File>.filled(_nImages,null,growable:false); // TODO: Add this to SharedPreferences
 
 class UserForm extends StatefulWidget {
   @override
@@ -20,35 +19,28 @@ class UserForm extends StatefulWidget {
 
 class _UserFormState extends State<UserForm> {
   final _formKey = GlobalKey<FormState>();
+  TextEditingController _lastUsernameController;
+
+
+  @override
+  void initState() {
+    // setState(() {
+    //   _lastUsernameController = TextEditingController(text: "");
+    // });
+
+    _initSharedPreferences();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _lastUsernameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: _initSharedPreferences(),
-      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-        String _lastUsername;
-
-        switch (snapshot.connectionState) {
-          case ConnectionState.none: 
-            log('none');
-            return new Text('ConnectionState.none');//_returnScaffold(""); // Return the page Scaffold but with nothing in the form
-          case ConnectionState.waiting:
-            log('waiting');
-            return _returnScaffold("");
-          default:
-            if (snapshot.hasData) {
-              log('hasData');
-              _lastUsername = snapshot.data;
-              log('_lastUsername = $_lastUsername');
-              return _returnScaffold(_lastUsername);
-            }
-            else {
-              log('NOT hasData');
-              return _returnScaffold("");
-            }
-        }
-      }
-    );
+    return _returnScaffold();
   }
 
   _showDialog(BuildContext context) {
@@ -74,156 +66,120 @@ class _UserFormState extends State<UserForm> {
           ],
         )
     );
-
+    
     if(imageSource != null) {
       final file = await ImagePicker.pickImage(source: imageSource);
       if(file != null) {
-        switch(_pickedImageNum) {
-          case 1: {
-            setState(() {
-              _pickedImage1 = file;
-              Provider.of<SweeUser>(context,listen:false).addImagePath(_pickedImageNum,_pickedImage1.path);
-            });
-          }
-          break;
-
-          case 2: {
-            setState(() {
-              _pickedImage2 = file;
-              Provider.of<SweeUser>(context,listen:false).addImagePath(_pickedImageNum,_pickedImage2.path);
-            });
-          }
-          break;      
-
-          case 3: {
-            setState(() {
-              _pickedImage3 = file;
-              Provider.of<SweeUser>(context,listen:false).addImagePath(_pickedImageNum,_pickedImage3.path);
-            });
-          }
-          break;
-
-          default: {
-            log('Case not recognized.');
-          }
-          break;
-        }
+        setState(() {
+          _pickedImages[_pickedImageNum] = file;
+          Provider.of<SweeUser>(context,listen:false).addImagePath(_pickedImageNum,_pickedImages[_pickedImageNum].path);
+        });
       }
     }
   }
 
-  Scaffold _returnScaffold(String lastUsername) {
-      return Scaffold(
-        appBar: AppBar(title: Text('Profile')),
-        body: Container(
-          padding:
-            const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-          child: Builder(
-            builder: (context) => Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextFormField(
-                    initialValue: lastUsername,
-                    decoration:
-                      InputDecoration(labelText: 'First name'),
-                    validator: (value) {
-                      if (value.isEmpty) {
-                        return 'Please enter your first name';
-                      }
-                      return null;
-                    },
-                    onSaved: (val) =>
-                      setState(() => _user.firstName = val),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16.0, horizontal: 16.0),
-                    child: RaisedButton(
-                      onPressed: () {
-                        final form = _formKey.currentState;
-                        if (form.validate()) {
-                          form.save();
-                          _user.save();
-                          // Provider.of<SweeUser>(context,listen:false).setUsername(_user.firstName);
-                          _saveSharedPreferences();
-                          _showDialog(context);
+  Scaffold _returnScaffold() {
+    return Scaffold(
+      appBar: AppBar(title: Text('Profile')),
+      body: Container(
+        padding:
+          const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+        child: ListView(
+          children: <Widget> [
+            Builder(
+              builder: (context) => Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextFormField(
+                      controller: _lastUsernameController,
+                      decoration:
+                        InputDecoration(labelText: 'First name'),
+                      validator: (value) {
+                        if (value.isEmpty) {
+                          return 'Please enter your first name';
                         }
+                        return null;
                       },
-                      child: Text('Save')
-                    )
-                  ),
-                  Consumer<SweeUser>(
-                    builder: (context,sweeuser,child) => Text('This is the value saved to SweeUser.username: ${sweeuser.username}'),
-                  ),
-                  SizedBox(height:50),
-                  AppBar(title: Text('Upload 3 Selfies')),
-                  SizedBox(height:50),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget> [
-                          Center(
-                            child: _pickedImage1 == null ?
-                            FloatingActionButton(
-                              onPressed: (){_pickImage(1);},
-                              child: Icon(Icons.image),
-                            ) :
-                            Image(image: FileImage(_pickedImage1),height: _imageSize,),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget> [
-                          Center(
-                            child: _pickedImage2 == null ?
-                            FloatingActionButton(
-                              onPressed: (){_pickImage(2);},
-                              child: Icon(Icons.image),
-                            ) :
-                            Image(image: FileImage(_pickedImage2),height: _imageSize,),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget> [
-                          Center(
-                            child: _pickedImage3 == null ?
-                            FloatingActionButton(
-                              onPressed: (){_pickImage(3);},
-                              child: Icon(Icons.image),
-                            ) :
-                            Image(image: FileImage(_pickedImage3),height: _imageSize,),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ]
+                      onSaved: (val) =>
+                        setState(() => _user.firstName = val),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16.0, horizontal: 16.0),
+                      child: RaisedButton(
+                        onPressed: () {
+                          final form = _formKey.currentState;
+                          if (form.validate()) {
+                            form.save();
+                            _user.save();
+                            // Provider.of<SweeUser>(context,listen:false).setUsername(_user.firstName);
+                            _saveSharedPreferences();
+                            _showDialog(context);
+                          }
+                        },
+                        child: Text('Save')
+                      )
+                    ),
+                    Consumer<SweeUser>(
+                      builder: (context,sweeuser,child) => Text('This is the value saved to SweeUser.username: ${sweeuser.username}'),
+                    ),
+                    SizedBox(height:50),
+                    AppBar(title: Text('Upload 3 Selfies')),
+                    SizedBox(height:25),
+                    ListView.builder(
+                      physics: const NeverScrollableScrollPhysics(), // Disable scrolling in this ListView instance, since the parent ListView srolls
+                      shrinkWrap: true,
+                      itemCount: _nImages,
+                      // gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 1, crossAxisSpacing: 1.0, mainAxisSpacing: 1.0),
+                      itemBuilder: (BuildContext context,int index){
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget> [
+                            Center(
+                              child: _pickedImages[index] == null ?
+                              FloatingActionButton(
+                                onPressed: (){_pickImage(index);},
+                                child: Icon(Icons.image),
+                              ) :
+                              Stack(
+                                children: <Widget> [
+                                  Image(image: FileImage(_pickedImages[index]),height: _imageSize,),
+                                  FloatingActionButton(
+                                    onPressed: (){_pickImage(index);},
+                                    child: Icon(Icons.image),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height:10),
+                          ],
+                        );
+                      },
+                    ),
+                  ]
+                )
               )
             )
-          )
-        )
-      );
-    }
+          ]
+        ),
+      ),
+    );
+  }
 
-  Future<String> _initSharedPreferences() async {
+  _initSharedPreferences() async {
+    log('_initSharedPreferences()');
     final prefs = await SharedPreferences.getInstance();
     final key = 'username';
     final value = prefs.getString(key) ?? 'Default User Name';
     _user.firstName = value; // Set the local variable
     Provider.of<SweeUser>(context,listen:false).setUsername(_user.firstName); // Set SweeUser (shared across multiple screens)
     log('read: $value');
-    return value;
+    setState(() {
+      _lastUsernameController = TextEditingController(text:value);
+    });
   }
 
   _saveSharedPreferences() async {

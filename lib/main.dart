@@ -54,7 +54,7 @@ class SweeUser with ChangeNotifier {
   }
 
   void addImagePath(index,path) {
-    imagePaths[index-1]=path;
+    imagePaths[index]=path;
     notifyListeners();
   }
 
