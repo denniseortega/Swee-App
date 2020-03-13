@@ -197,7 +197,7 @@ if [ -r "${ARTIFACT_LIST_FILE}" ]; then
 fi
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
-  install_framework "${PODS_ROOT}/../.symlinks/flutter/ios/Flutter.framework"
+  install_framework "${PODS_ROOT}/../Flutter/Flutter.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/camera/camera.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/connectivity/connectivity.framework"
@@ -209,7 +209,7 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/video_player/video_player.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
-  install_framework "${PODS_ROOT}/../.symlinks/flutter/ios/Flutter.framework"
+  install_framework "${PODS_ROOT}/../Flutter/Flutter.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/camera/camera.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/connectivity/connectivity.framework"
@@ -221,7 +221,7 @@ if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/video_player/video_player.framework"
 fi
 if [[ "$CONFIGURATION" == "Profile" ]]; then
-  install_framework "${PODS_ROOT}/../.symlinks/flutter/ios/Flutter.framework"
+  install_framework "${PODS_ROOT}/../Flutter/Flutter.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/camera/camera.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/connectivity/connectivity.framework"
