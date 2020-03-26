@@ -44,8 +44,7 @@ class _UserFormState extends State<UserForm> {
   }
 
   _showDialog(BuildContext context) {
-    Scaffold.of(context)
-        .showSnackBar(SnackBar(content: Text('Submitting form')));
+    Scaffold.of(context).showSnackBar(SnackBar(content: Text('Submitting form')));
   }
 
   void _pickImage(int _pickedImageNum) async {
@@ -95,7 +94,15 @@ class _UserFormState extends State<UserForm> {
                     TextFormField(
                       controller: _lastUsernameController,
                       decoration:
-                        InputDecoration(labelText: 'First name'),
+                        InputDecoration(
+                          labelText: 'First name',
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.clear),
+                            onPressed: () {
+                              _lastUsernameController.clear();
+                            }
+                          ),
+                        ),
                       validator: (value) {
                         if (value.isEmpty) {
                           return 'Please enter your first name';
@@ -122,10 +129,10 @@ class _UserFormState extends State<UserForm> {
                         child: Text('Save')
                       )
                     ),
-                    Consumer<SweeUser>(
-                      builder: (context,sweeuser,child) => Text('This is the value saved to SweeUser.username: ${sweeuser.username}'),
-                    ),
-                    SizedBox(height:50),
+                    // Consumer<SweeUser>(
+                    //   builder: (context,sweeuser,child) => Text('This is the value saved to SweeUser.username: ${sweeuser.username}'),
+                    // ),
+                    // SizedBox(height:50),
                     AppBar(title: Text('Upload 3 Selfies')),
                     SizedBox(height:25),
                     ListView.builder(
