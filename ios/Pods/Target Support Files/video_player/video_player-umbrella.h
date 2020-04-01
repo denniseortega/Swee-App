@@ -10,7 +10,7 @@
 #endif
 #endif
 
-#import "VideoPlayerPlugin.h"
+#import "FLTVideoPlayerPlugin.h"
 
 FOUNDATION_EXPORT double video_playerVersionNumber;
 FOUNDATION_EXPORT const unsigned char video_playerVersionString[];

@@ -199,7 +199,6 @@ fi
 if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${PODS_ROOT}/../Flutter/Flutter.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/camera/camera.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/connectivity/connectivity.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/flutter_downloader/flutter_downloader.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/get_ip/get_ip.framework"
@@ -207,11 +206,11 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/path_provider/path_provider.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/shared_preferences/shared_preferences.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/video_player/video_player.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/wakelock/wakelock.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${PODS_ROOT}/../Flutter/Flutter.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/camera/camera.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/connectivity/connectivity.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/flutter_downloader/flutter_downloader.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/get_ip/get_ip.framework"
@@ -219,11 +218,11 @@ if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/path_provider/path_provider.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/shared_preferences/shared_preferences.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/video_player/video_player.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/wakelock/wakelock.framework"
 fi
 if [[ "$CONFIGURATION" == "Profile" ]]; then
   install_framework "${PODS_ROOT}/../Flutter/Flutter.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework"
-  install_framework "${BUILT_PRODUCTS_DIR}/camera/camera.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/connectivity/connectivity.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/flutter_downloader/flutter_downloader.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/get_ip/get_ip.framework"
@@ -231,6 +230,7 @@ if [[ "$CONFIGURATION" == "Profile" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/path_provider/path_provider.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/shared_preferences/shared_preferences.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/video_player/video_player.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/wakelock/wakelock.framework"
 fi
 if [ "${COCOAPODS_PARALLEL_CODE_SIGN}" == "true" ]; then
   wait

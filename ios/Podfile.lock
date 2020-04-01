@@ -1,6 +1,4 @@
 PODS:
-  - camera (0.0.1):
-    - Flutter
   - connectivity (0.0.1):
     - Flutter
     - Reachability
@@ -24,9 +22,12 @@ PODS:
     - Flutter
   - video_player (0.0.1):
     - Flutter
+  - video_player_web (0.0.1):
+    - Flutter
+  - wakelock (0.0.1):
+    - Flutter
 
 DEPENDENCIES:
-  - camera (from `.symlinks/plugins/camera/ios`)
   - connectivity (from `.symlinks/plugins/connectivity/ios`)
   - connectivity_macos (from `.symlinks/plugins/connectivity_macos/ios`)
   - Flutter (from `Flutter`)
@@ -38,14 +39,14 @@ DEPENDENCIES:
   - shared_preferences_macos (from `.symlinks/plugins/shared_preferences_macos/ios`)
   - shared_preferences_web (from `.symlinks/plugins/shared_preferences_web/ios`)
   - video_player (from `.symlinks/plugins/video_player/ios`)
+  - video_player_web (from `.symlinks/plugins/video_player_web/ios`)
+  - wakelock (from `.symlinks/plugins/wakelock/ios`)
 
 SPEC REPOS:
   trunk:
     - Reachability
 
 EXTERNAL SOURCES:
-  camera:
-    :path: ".symlinks/plugins/camera/ios"
   connectivity:
     :path: ".symlinks/plugins/connectivity/ios"
   connectivity_macos:
@@ -68,9 +69,12 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/shared_preferences_web/ios"
   video_player:
     :path: ".symlinks/plugins/video_player/ios"
+  video_player_web:
+    :path: ".symlinks/plugins/video_player_web/ios"
+  wakelock:
+    :path: ".symlinks/plugins/wakelock/ios"
 
 SPEC CHECKSUMS:
-  camera: d56ad165545ae5a0ffb892376033760a969c68c8
   connectivity: 6e94255659cc86dcbef1d452ad3e0491bb1b3e75
   connectivity_macos: e2e9731b6b22dda39eb1b128f6969d574460e191
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
@@ -83,6 +87,8 @@ SPEC CHECKSUMS:
   shared_preferences_macos: f3f29b71ccbb56bf40c9dd6396c9acf15e214087
   shared_preferences_web: 141cce0c3ed1a1c5bf2a0e44f52d31eeb66e5ea9
   video_player: 69c5f029fac4ffe4fc8a85ea7f7b793709661549
+  video_player_web: da8cadb8274ed4f8dbee8d7171b420dedd437ce7
+  wakelock: 0d4a70faf8950410735e3f61fb15d517c8a6efc4
 
 PODFILE CHECKSUM: 1b66dae606f75376c5f2135a8290850eeb09ae83
 
