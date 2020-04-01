@@ -32,9 +32,9 @@ class HomePageState extends State<HomePage> {
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.blue[800],
         items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('Home')),
-          BottomNavigationBarItem(icon: Icon(Icons.videocam), title: Text('Video')),
-          BottomNavigationBarItem(icon: Icon(Icons.network_wifi), title: Text('WifiDev')),
+          BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('User Profile')),
+          BottomNavigationBarItem(icon: Icon(Icons.videocam), title: Text('Current Hole')),
+          BottomNavigationBarItem(icon: Icon(Icons.video_library), title: Text('Video Library')),
           ],
         currentIndex: selectedIndex,
         fixedColor: Colors.deepPurple[300],

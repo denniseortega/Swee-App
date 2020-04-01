@@ -38,7 +38,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       // backgroundColor: Colors.white,
-      appBar: AppBar(title: Text('Video')),
+      appBar: AppBar(title: Text('Videos for Hole 123')),
       body:
       RefreshIndicator(
         onRefresh: _refreshGridView,
@@ -75,9 +75,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   Stack _returnVideoPlayerStack(index) {
     String thisvid = _videos[index];
-    
     log('$thisvid');
-
 
     return Stack(
       children: <Widget>[

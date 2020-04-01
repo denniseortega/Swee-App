@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
-// import 'package:flutter_downloader/flutter_downloader.dart';
 
 void main() async {
-  // Ensure FlutterDownloader is initialized
-  WidgetsFlutterBinding.ensureInitialized();
-  // await FlutterDownloader.initialize(); // TODO: This doesn't seem to work with hot reload... but it seems to work fine through Runner?!
-
   runApp(
     // User a provider to provide variables across widgets
     ChangeNotifierProvider(
@@ -17,7 +12,7 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget with WidgetsBindingObserver {
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -26,9 +21,7 @@ class MyApp extends StatelessWidget with WidgetsBindingObserver {
         brightness: Brightness.dark,
         primaryColor: Colors.blue[800],
         accentColor: Colors.cyan[600],
-
-        //Default font family
-        fontFamily: 'Roboto'
+        fontFamily: 'Roboto' //Default font family
       ),
       home: HomePage(),
     );
@@ -41,8 +34,6 @@ class SweeUser with ChangeNotifier {
   String deviceIP = 'Default.Device.IP';
   List<String> imagePaths = List.filled(3,'');//[];
   bool isRegistered = false;
-  bool flutterDownloaderInitialized = false;
-  // var videoPaths = List();
   List<String> videoPaths = [];
   List<String> videoPathsLocal = [];
   String mainNodeIP = '192.168.4.1:5001';
@@ -74,13 +65,18 @@ class SweeUser with ChangeNotifier {
     notifyListeners();
   }
 
-  void setRegistration(registrationStatus) {
-    isRegistered = registrationStatus;
+  void clearVideoPath() {
+    videoPaths = [];
     notifyListeners();
   }
 
-  void setFlutterDownloaderInitialized(initStatus) {
-    flutterDownloaderInitialized = initStatus;
+  void clearVideoPathLocal() {
+    videoPathsLocal = [];
+    notifyListeners();
+  }
+
+  void setRegistration(registrationStatus) {
+    isRegistered = registrationStatus;
     notifyListeners();
   }
 }
