@@ -20,7 +20,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   void initState() {
-    _videos = Provider.of<SweeUser>(context,listen:false).videoPaths; // Get this
+    _videos = Provider.of<SweeUser>(context,listen:false).videoPathsCurrentHole; // Get this
     _initVideoPlayers();
     super.initState();
   }
@@ -37,7 +37,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Colors.white,
       appBar: AppBar(title: Text('Videos for Hole 123')),
       body:
       RefreshIndicator(
@@ -100,10 +99,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         ),
         Center(
           child: ButtonTheme(
-            height: 100.0,
-            minWidth: 200.0,
+            height: 10.0,
+            minWidth: 10.0,
             child: RaisedButton(
-              padding: EdgeInsets.all(60.0),
+              padding: EdgeInsets.all(0.0),
               color: Colors.transparent,
               elevation: 0,
               textColor: Colors.white,
@@ -147,11 +146,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   Future<void> _refreshGridView() async {
-    log('Refreshing GridView()');
+    log('Refreshing "Current Hole"...');
     _controllers = []; // Reset
     _controllersInit = []; // Reset
-    // _videos.add("https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4"); // Add new video to videos for test. IRL this should reference the SweeUser()
-    _videos = Provider.of<SweeUser>(context,listen:false).videoPaths;
+    _videos = Provider.of<SweeUser>(context,listen:false).videoPathsCurrentHole;
     _initVideoPlayers(); // Re-initialize video player(s)
   }
 }

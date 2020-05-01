@@ -1,5 +1,4 @@
 // Lots of connectivity package related code borrowed from connectivity docs: https://pub.dev/packages/connectivity
-
 import 'package:flutter/material.dart';
 import '../../models/user.dart';
 import 'package:provider/provider.dart';
@@ -15,18 +14,13 @@ import 'package:get_ip/get_ip.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:dio/dio.dart';
+import 'package:image/image.dart' as Im;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import 'package:dio/dio.dart';
-// import '../../screens/connectivity/wifi_dev.dart';
-// import 'package:flutter/foundation.dart';
-// import 'package:video_player/video_player.dart';
-// import 'package:chewie/chewie.dart';
 
 final _user = User(); // Moved this out here, which allows the user info to persist when navigating between screens
 double _imageSize = 175;
-int _nImages = 3;
-List<File> _pickedImages = List<File>.filled(_nImages,null,growable:false); // TODO: Add this to SharedPreferences
 
 class UserForm extends StatefulWidget {
   @override
@@ -40,33 +34,26 @@ class _UserFormState extends State<UserForm> {
   Uri _uriUsers;
   final int _httpTimeoutTime = 2;
   String _connectionStatus = 'Unknown';
-  String _wifiName = 'Unknown';
   Timer _timer;
-  int _counter = 0;
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<ConnectivityResult> _connectivitySubscription;
   Dio dio = Dio();
   String _mainNodeIP;
   // String _secondaryNodeIP;
-  SnackBar _snackBarUsernameTaken;
   SnackBar _snackBarNoImages = SnackBar(content: Text("No profile images were specified. Please select at least one profile image on the 'User Profile' page."));
-  SnackBar _snackBarAlreadyRegistered;
-  SnackBar _snackBarRegistrationSuccessful;
   SnackBar _snackBarHttpTimeout = SnackBar(content: Text("A Swee server connection could not be established. Are you connected Swee wifi?"), action: SnackBarAction(label: 'Dismiss',onPressed: () {}));
   SnackBar _snackBarGoodName = SnackBar(content: Text("Good name!"), action: SnackBarAction(label: 'Dismiss',onPressed: () {}));
 
   @override
   void initState() {
     _initSharedPreferences();
+    _initSharedPrefsImagePaths();
 
     _mainNodeIP = Provider.of<SweeUser>(context,listen:false).mainNodeIP;
     _uriUsers = Uri.http('$_mainNodeIP','/users');
 
-    initPlatformState();
     initConnectivity();
-    buildSnackBars();
     _connectivitySubscription = _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
-    // _timer = Timer.periodic(Duration(seconds: 10), (Timer t) => checkForNewVideos(Provider.of<SweeUser>(context,listen:false).username,Provider.of<SweeUser>(context,listen:false).videoPaths));
     _mainNodeIP = Provider.of<SweeUser>(context,listen:false).mainNodeIP;
     // _secondaryNodeIP = Provider.of<SweeUser>(context,listen:false).secondaryNodeIP;
 
@@ -88,80 +75,6 @@ class _UserFormState extends State<UserForm> {
     return _returnScaffold();
   }
 
-  void buildSnackBars() {
-    String _username = Provider.of<SweeUser>(context,listen:false).username;
-    String _deviceIP = Provider.of<SweeUser>(context,listen:false).deviceIP;
-    _snackBarUsernameTaken = SnackBar(content: Text("The username $_username is already registered with this Swee server with a different device IP address. Please choose a different username for this device."));
-    _snackBarAlreadyRegistered = SnackBar(content: Text("This device ($_username, $_deviceIP) is already registered with this Swee server."));
-    _snackBarRegistrationSuccessful = SnackBar(content: Text("User ($_username, $_deviceIP) registration successful!"));
-  }
-
-  void checkForNewVideos(String username,List videoPaths) async {
-    if (_wifiName=='swee') {
-      _counter++;
-      log('video check: $_counter for $username');
-      log('current video paths:');
-      for (String fp in videoPaths) {
-        if (fp.isNotEmpty) {
-          log('  $fp');
-        }
-        else {log('[]');}
-      }
-
-      try {
-        var uri = Uri.http('$_mainNodeIP','/user/video',{'username':username});
-        log('$uri');
-        var response = await http.get(uri);
-        if (response.statusCode==200) {
-          try {
-            log('Response received: /users/video');
-            log(response.body);
-            VideoResponse videoResponse = VideoResponse.fromJson(json.decode(response.body));
-            List videoPathsOnServer = videoResponse.filePaths;
-            for (String vp in videoPathsOnServer) {
-              String filename = path.basename(vp);
-              var uriDownload = Uri.http('$_mainNodeIP','/downloads/$username/$filename');
-              String vpUrl = uriDownload.toString();
-              var _dir = await _localPath;
-              String _localPathFile = _dir+"/$filename";
-              log('$vpUrl');
-              log('Local app directory: $_dir');
-              
-              if (videoPaths.contains(vpUrl)) {
-                log('$vpUrl already exists in SweeUser.videoPaths');
-              }
-              else {
-                try {
-                  await dio.download(uriDownload.toString(),_localPathFile);//, onProgress:(rec,total){log("Rec: $rec, Total: $total");});
-                  Provider.of<SweeUser>(context,listen:false).addVideoPath(vpUrl);
-                  Provider.of<SweeUser>(context,listen:false).addVideoPathLocal(_localPathFile);
-                }
-                catch (e) {
-                  log(e);
-                }
-                log('Download complete');
-              }
-            }
-          }
-          catch (_) {
-            log('Something went wrong when trying to download new videos');
-          }  
-        }
-        else {
-          log('No response: /user/video');
-        }
-      }
-      catch (_) {
-        log('Something went wrong when trying to check for new videos');
-      }
-    }
-  }
-
-  Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
-  }
-
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initConnectivity() async {
     ConnectivityResult result;
@@ -180,22 +93,6 @@ class _UserFormState extends State<UserForm> {
     }
 
     return _updateConnectionStatus(result);
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String deviceIP;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      deviceIP = await GetIp.ipAddress;
-    } on PlatformException {
-      deviceIP = 'Failed to get ipAdress.';
-    }
-    log('get_ip returned $deviceIP');
-    // Set deviceIP for SweeUser
-    Provider.of<SweeUser>(context,listen:false).setDeviceIP(deviceIP);
-
-    if (!mounted) return;
   }
 
   void _pickImage(int _pickedImageNum) async {
@@ -220,15 +117,17 @@ class _UserFormState extends State<UserForm> {
     if(imageSource != null) {
       final file = await ImagePicker.pickImage(source: imageSource);
       if(file != null) {
-        setState(() {
-          _pickedImages[_pickedImageNum] = file;
-          Provider.of<SweeUser>(context,listen:false).addImagePath(_pickedImageNum,_pickedImages[_pickedImageNum].path);
-        });
+        // setState(() {
+        //   _pickedImages[_pickedImageNum] = file;
+        //   Provider.of<SweeUser>(context,listen:false).addImagePath(_pickedImageNum,_pickedImages[_pickedImageNum].path);
+        // });
+        Provider.of<SweeUser>(context,listen:false).addImagePath(_pickedImageNum,file.path);
+        _saveSharedPrefsImagePaths();
       }
     }
-  }
+  } 
 
-Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     switch (result) {
       case ConnectivityResult.wifi:
         String wifiName, wifiBSSID, wifiIP;
@@ -279,6 +178,7 @@ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
 
         try {
           wifiIP = await _connectivity.getWifiIP();
+          
         } on PlatformException catch (e) {
           log(e.toString());
           wifiIP = "Failed to get Wifi IP";
@@ -290,43 +190,32 @@ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
               'Wifi BSSID: $wifiBSSID\n'
               'Wifi IP: $wifiIP';
         });
-        setState((){_wifiName='$wifiName';});
-
-        // await registerUser(Provider.of<SweeUser>(context,listen:false).username,
-        //   Provider.of<SweeUser>(context,listen:false).deviceIP,
-        //   Provider.of<SweeUser>(context,listen:false).imagePaths,
-        // );
-        // bool registrationStatus = true; // TODO: have registerUser return a true or false based on success
-        // Provider.of<SweeUser>(context,listen:false).setRegistration(registrationStatus);
-        // var regstat = Provider.of<SweeUser>(context,listen:false).isRegistered;
-        // log('User is registered? $regstat');
+        Provider.of<SweeUser>(context,listen:false).setWifiName(wifiName);
+        Provider.of<SweeUser>(context,listen:false).setDeviceIP(wifiIP);
 
         break;
       case ConnectivityResult.mobile:
         log('Connection: Mobile Detected');
         setState(() => _connectionStatus = result.toString());
-        setState(() {_wifiName='N/A';});
-        // setState((){_profileUploaded = false;});
-        // _uploadProfile(result.toString());
-        Provider.of<SweeUser>(context,listen:false).clearVideoPath();
+        _clearSweeUserWifiInfo();
         break;
       case ConnectivityResult.none:
         log('Connection: None Detected');
         setState(() => _connectionStatus = result.toString());
-        setState(() {_wifiName='N/A';});
-        // setState((){_profileUploaded = false;});
-        // _uploadProfile(result.toString());
-        Provider.of<SweeUser>(context,listen:false).clearVideoPath();
+        _clearSweeUserWifiInfo();
         break;
       default:
         log('Connection: Failed to Get Connectivity');
         setState(() => _connectionStatus = 'Failed to get connectivity.');
-        setState(() {_wifiName='N/A';});
-        // setState((){_profileUploaded = false;});
-        // _uploadProfile(result.toString());
-        Provider.of<SweeUser>(context,listen:false).clearVideoPath();
+        _clearSweeUserWifiInfo();   
         break;
     }
+  }
+
+  void _clearSweeUserWifiInfo() {
+    Provider.of<SweeUser>(context,listen:false).clearVideoPaths();
+    Provider.of<SweeUser>(context,listen:false).setWifiName('');
+    Provider.of<SweeUser>(context,listen:false).setDeviceIP('NaN.NaN.NaN.NaN'); 
   }
 
   Future<void> registerUser(String username, String deviceIP, List<String> filePaths) async {
@@ -347,11 +236,13 @@ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
       var response1 = await http.get(uri1);
       Map thisUserData = json.decode(response1.body);
       UserInfo thisUser = UserInfo.fromJson(thisUserData['data']);
-      if (thisUser.deviceip==Provider.of<SweeUser>(context,listen:false).deviceIP) { // TODO: as-coded, this doesn't allow the user to change their name mid session. changing the name will not successfully re-register the user. maybe use device IP instead of username as the key?
+      if (thisUser.deviceip==Provider.of<SweeUser>(context,listen:false).deviceIP) {
+        SnackBar _snackBarAlreadyRegistered = SnackBar(content: Text("This device ($username, $deviceIP) is already registered with this Swee server."));
         Scaffold.of(context).showSnackBar(_snackBarAlreadyRegistered);
         log('registerUser: Already registered');
       }
       else {
+        SnackBar _snackBarUsernameTaken = SnackBar(content: Text("The username $username is already registered with this Swee server with a different device IP address. Please choose a different username for this device."));
         Scaffold.of(context).showSnackBar(_snackBarUsernameTaken);
         log('registerUser: Username taken');
       }
@@ -364,8 +255,6 @@ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
           filePathsTemp.add(fp);
         }
       }
-
-      // TODO: check what images were uploaded already, and upload the NEW ones
 
       if (filePathsTemp.isNotEmpty) {
         // Create user
@@ -381,8 +270,10 @@ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
         await joinSession(username);
 
         // Clear http videos
-        Provider.of<SweeUser>(context,listen:false).clearVideoPath();
-        
+        Provider.of<SweeUser>(context,listen:false).clearVideoPaths();
+        Provider.of<SweeUser>(context,listen:false).setRegistration(true);
+
+        SnackBar _snackBarRegistrationSuccessful = SnackBar(content: Text("User ($username, $deviceIP) registration successful!"));
         Scaffold.of(context).showSnackBar(_snackBarRegistrationSuccessful);
         log('registerUser: $username ($deviceIP) successfully registered!');
       }
@@ -391,6 +282,23 @@ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
         log('registerUser: No profile images to upload. Choose profile image(s) and try again.');
       }
     }
+  }
+
+  Future<void> unregisterUser(String username, String deviceIP) async {
+    // Do something here
+    try {
+      var uri = Uri.parse('http://$_mainNodeIP/session/leave/$username');
+      var response = await http.post(uri);
+      if (response.statusCode == 200) log('$username left a Swee session!');
+    }
+    catch (_) {
+      log('Error in unregisterUser');
+    }
+    Provider.of<SweeUser>(context,listen:false).setRegistration(false);
+
+    SnackBar _snackBarUnregistrationSuccessful = SnackBar(content: Text("User ($username, $deviceIP) unregistration successful!"));
+    Scaffold.of(context).showSnackBar(_snackBarUnregistrationSuccessful);
+    log('registerUser: $username ($deviceIP) successfully unregistered!');
   }
 
   Future<void> createUser(String username, String deviceIP) async {
@@ -411,14 +319,40 @@ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
       for (String fp in filePaths) {
         var request = http.MultipartRequest('POST', uri);
         request.fields['username'] = username;
-        request.files.add(await http.MultipartFile.fromPath('file', fp));
+
+        // Resize image before upload - helps facenet train faster
+        Im.Image image = Im.decodeImage(File(fp).readAsBytesSync());
+        Im.Image thumbnail = Im.copyResize(image,width:120);
+        String localPath = await _localPath;
+        String filename = path.basename(fp);
+
+        // Replace the last occurence of .
+        int ind = filename.lastIndexOf(".");
+        if (ind>0) {
+          filename = filename.substring(0,ind) + '_resized' + filename.substring(ind,filename.length);
+        }
+
+        // Rewrite the resized image
+        String fpNew = path.join(localPath, filename);
+        File(fpNew)..writeAsBytesSync(Im.encodePng(thumbnail));
+
+        // Upload
+        request.files.add(await http.MultipartFile.fromPath('file', fpNew));
         var response = await request.send();
-        if (response.statusCode != 500) log('Uploaded image to server: $fp');
+
+        if (response.statusCode != 500) {
+          log('Uploaded image to server: $fp');
+        }
       }
     }
-    catch (_) {
+    catch (e) {
       log('Error in uploadImageToServer');
     }
+  }
+
+  Future<String> get _localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
   }
 
   Future<void> uploadImageToDB(String username, List<String> filePaths) async {
@@ -462,6 +396,7 @@ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     TextFormField(
+                      enabled: Provider.of<SweeUser>(context,listen:false).isRegistered? false:true,
                       controller: _lastUsernameController,
                       decoration:
                         InputDecoration(
@@ -485,75 +420,92 @@ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
                       onSaved: (val) =>
                         setState(() => _user.firstName = val),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 300),
-                      child: RaisedButton(
-                        onPressed: () async {                          
-                          try {
-                            final response = await http.get(_uriUsers).timeout(Duration(seconds:_httpTimeoutTime)); // TODO: SocketException here that doesn't get caught for some reason? Is this a VSCode issue or an actual issue with the code?
-                            final UsersResponse registeredUserData = UsersResponse.fromJson(json.decode(response.body));
-                            final List<String> registeredUsers = [];
-                            for (UserInfo ui in registeredUserData.users) {
-                              registeredUsers.add(ui.username);
-                            }
-                            // _registeredUsers = registeredUsers;
-                          }
-                          on SocketException catch(_) {
-                            log('SocketException');
-                            return;
-                          }
-                          catch (e) {
-                            log('http call to /users timed out after $_httpTimeoutTime second');
-                            Scaffold.of(context).showSnackBar(_snackBarHttpTimeout);
-                            return;
-                          }
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        RaisedButton(
+                          onPressed: () async {         
+                            if (Provider.of<SweeUser>(context,listen:false).isRegistered) { // User already registered, so unregister
+                              unregisterUser(Provider.of<SweeUser>(context,listen:false).username,Provider.of<SweeUser>(context,listen:false).deviceIP);
+                            } 
+                            else { // Register user
+                              try {
+                                final response = await http.get(_uriUsers).timeout(Duration(seconds:_httpTimeoutTime)); // TODO: SocketException here that doesn't get caught for some reason? Is this a VSCode issue or an actual issue with the code?
+                                final UsersResponse registeredUserData = UsersResponse.fromJson(json.decode(response.body));
+                                final List<String> registeredUsers = [];
+                                for (UserInfo ui in registeredUserData.users) {
+                                  registeredUsers.add(ui.username);
+                                }
+                              }
+                              on SocketException catch(_) {
+                                log('SocketException');
+                                return;
+                              }
+                              catch (e) {
+                                log('http call to /users timed out after $_httpTimeoutTime second');
+                                Scaffold.of(context).showSnackBar(_snackBarHttpTimeout);
+                                return;
+                              }
 
-                          final form = _formKey.currentState;
-                          if (form.validate()) {
-                            form.save();
-                            _user.save();
-                            _saveSharedPreferences();
-                            
-                            await registerUser(Provider.of<SweeUser>(context,listen:false).username,
-                              Provider.of<SweeUser>(context,listen:false).deviceIP,
-                              Provider.of<SweeUser>(context,listen:false).imagePaths,
-                            );
-                            
-                            _timer = Timer.periodic(Duration(seconds: 10), (Timer t) => checkForNewVideos(Provider.of<SweeUser>(context,listen:false).username,Provider.of<SweeUser>(context,listen:false).videoPaths));
-                            // _showDialog(context);
-                            log('Username available!');
-                            Scaffold.of(context).showSnackBar(_snackBarGoodName);
-                          }
-                        },
-                        child: Text('Join Swee Session'),
-                      )
+                              final form = _formKey.currentState;
+                              if (form.validate()) {
+                                form.save();
+                                _user.save();
+
+                                String _username = _user.firstName;
+                                String _deviceIP = Provider.of<SweeUser>(context,listen:false).deviceIP;
+                                List _imagePaths = Provider.of<SweeUser>(context,listen:false).imagePaths;
+
+                                Provider.of<SweeUser>(context,listen:false).setUsername(_username);
+                                _saveSharedPreferences();
+
+                                if (_deviceIP==null) {
+                                  log('_deviceIP returned null. Why?');
+                                  _deviceIP = await GetIp.ipAddress;
+                                }
+
+                                await registerUser(_username, _deviceIP, _imagePaths);
+                                
+                                log('Username available!');
+                                Scaffold.of(context).showSnackBar(_snackBarGoodName);
+                              }
+                            }                
+                          },
+                          child: !Provider.of<SweeUser>(context,listen:true).isRegistered ? Text('Join Swee Session'):Text('Leave Swee Session'),
+                        )
+                      ],
                     ),
-                    SizedBox(height:0),
-                    Container(
-                      padding: EdgeInsets.symmetric(vertical:8,horizontal:150),
-                      child: AppBar(title: Text('Upload 1-3 Selfies'), backgroundColor: Colors.grey,),
-                    ),
+                    SizedBox(height:25),
+                    AppBar(title: Text('Upload 1-3 Selfies'), backgroundColor: Colors.grey,),
                     SizedBox(height:25),
                     ListView.builder(
                       physics: const NeverScrollableScrollPhysics(), // Disable scrolling in this ListView instance, since the parent ListView srolls
                       shrinkWrap: true,
-                      itemCount: _nImages,
+                      itemCount: Provider.of<SweeUser>(context,listen:false).imagePaths.length,
                       // gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 1, crossAxisSpacing: 1.0, mainAxisSpacing: 1.0),
-                      itemBuilder: (BuildContext context,int index){
+                      itemBuilder: (BuildContext context,int index) {
+                        String thisImagePath = Provider.of<SweeUser>(context,listen:false).imagePaths[index];
+                        bool imageExists = false;
+                        if (File(thisImagePath).existsSync()) {
+                          imageExists = true;
+                        }
+
                         return Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: <Widget> [
                             Center(
-                              child: _pickedImages[index] == null ?
+                              child: !imageExists?
                               FloatingActionButton(
                                 onPressed: (){_pickImage(index);},
                                 child: Icon(Icons.image),
                               ) :
                               Stack(
                                 children: <Widget> [
-                                  Image(image: FileImage(_pickedImages[index]),height: _imageSize,),
+                                  Image(
+                                    image: FileImage(File(thisImagePath)),
+                                    height: _imageSize,
+                                  ),
                                   FloatingActionButton(
                                     onPressed: (){_pickImage(index);},
                                     child: Icon(Icons.image),
@@ -581,13 +533,13 @@ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
   }
 
   _initSharedPreferences() async {
-    log('_initSharedPreferences()');
+    // log('_initSharedPreferences()');
     final prefs = await SharedPreferences.getInstance();
     final key = 'username';
     final value = prefs.getString(key) ?? 'Default User Name';
     _user.firstName = value; // Set the local variable
     Provider.of<SweeUser>(context,listen:false).setUsername(_user.firstName); // Set SweeUser (shared across multiple screens)
-    log('read: $value');
+    // log('read: $value');
     setState(() {
       _lastUsernameController = TextEditingController(text:value);
     });
@@ -600,6 +552,39 @@ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     prefs.setString(key, value);
     Provider.of<SweeUser>(context,listen:false).setUsername(_user.firstName); // Set SweeUser (shared across multiple screens)
     log('saved: $value');
+  }
+
+  _initSharedPrefsImagePaths() async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'imagePaths';
+    final value = prefs.getStringList(key) ?? Provider.of<SweeUser>(context,listen:false).imagePaths;
+    int idx = 0;
+    bool valueChanged = false;
+    for (String fp in value) {
+      if (await File(fp).exists()) {
+        log('_initSharedPrefsImagePaths: File exists');
+      }
+      else {
+        if (value[idx]!="") {
+          log('_initSharedPrefsImagePaths: File does not exist... Removing from list');
+          value[idx] = "";
+          valueChanged = true;
+        }
+      }
+      idx++;
+    }
+    Provider.of<SweeUser>(context,listen:false).setImagePaths(value);
+
+    if (valueChanged) {
+      _saveSharedPrefsImagePaths();
+    }
+  }
+
+  _saveSharedPrefsImagePaths() async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'imagePaths';
+    final value = Provider.of<SweeUser>(context,listen:false).imagePaths;
+    prefs.setStringList(key, value);
   }
 }
 
@@ -617,12 +602,12 @@ Future<void> _updateConnectionStatus(ConnectivityResult result) async {
 
 
 class VideoResponse {
-  final List filePaths;
+  final List<String> filePaths;
 
   VideoResponse({this.filePaths});
 
   factory VideoResponse.fromJson(Map<String,dynamic> json) {
-    return VideoResponse(filePaths: json['file_paths']);
+    return VideoResponse(filePaths: json['file_paths'].cast<String>());
   }
 }
 
