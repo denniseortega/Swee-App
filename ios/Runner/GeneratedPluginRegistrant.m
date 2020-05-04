@@ -10,12 +10,6 @@
 @import connectivity;
 #endif
 
-#if __has_include(<flutter_downloader/FlutterDownloaderPlugin.h>)
-#import <flutter_downloader/FlutterDownloaderPlugin.h>
-#else
-@import flutter_downloader;
-#endif
-
 #if __has_include(<get_ip/GetIpPlugin.h>)
 #import <get_ip/GetIpPlugin.h>
 #else
@@ -56,7 +50,6 @@
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
   [FLTConnectivityPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTConnectivityPlugin"]];
-  [FlutterDownloaderPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterDownloaderPlugin"]];
   [GetIpPlugin registerWithRegistrar:[registry registrarForPlugin:@"GetIpPlugin"]];
   [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];
   [FLTPathProviderPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTPathProviderPlugin"]];
