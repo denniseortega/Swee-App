@@ -213,7 +213,7 @@ class _UserFormState extends State<UserForm> {
   }
 
   void _clearSweeUserWifiInfo() {
-    Provider.of<SweeUser>(context,listen:false).clearVideoPaths();
+    Provider.of<SweeUser>(context,listen:false).clearVideoPathsCurrentHole();
     Provider.of<SweeUser>(context,listen:false).setWifiName('');
     Provider.of<SweeUser>(context,listen:false).setDeviceIP('NaN.NaN.NaN.NaN'); 
   }
