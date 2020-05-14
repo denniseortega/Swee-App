@@ -44,6 +44,141 @@ class HomePageState extends State<HomePage> {
     super.initState();
   }
 
+  void _checkForNewVideos() async {
+    String _now = new DateTime.now().toString();
+    String _username = Provider.of<SweeUser>(context,listen:true).username;
+    List _videoPaths = Provider.of<SweeUser>(context,listen:true).videoPaths;
+    List _videoPathsCurrentHole = Provider.of<SweeUser>(context,listen:true).videoPathsCurrentHole;
+    String _wifiName = Provider.of<SweeUser>(context,listen:true).wifiName;
+
+    if (_wifiName=='swee') {
+      if (Provider.of<SweeUser>(context,listen:false).isRegistered) {
+        log('_checkForNewVideos: Video check for "$_username": $_now');
+
+        try {
+          var uriUser = Uri.http('$_mainNodeIP','/user',{'username':_username});
+          var responseUser = await http.get(uriUser);
+
+          if (responseUser.statusCode==204) {
+            log('_checkForNewVideos: Connectivity check... $_username is no longer connected to swee');
+            _showDialogLostConnection();
+            Provider.of<SweeUser>(context,listen:false).setRegistration(false);
+          }
+          else {
+            log('_checkForNewVideos: Connectivity check... $_username is connected to swee');
+          }
+        }
+        catch(e) {
+          log('_checkForNewVideos: Something when wrong when trying to determine user connectivity');
+        }
+
+        // log('_checkForNewVideos: current video paths:');
+        // for (String fp in _videoPaths) {
+        //   if (fp.isNotEmpty) {
+        //     log('  $fp');
+        //   }
+        //   else {log('[]');}
+        // }
+
+        try {
+          var uri = Uri.http('$_mainNodeIP','/user/video',{'username':_username});
+          var response = await http.get(uri);
+          if (response.statusCode==200) {
+            try {
+              // log('_checkForNewVideos: Response received: /users/video');
+              // log(response.body);
+              VideoResponse videoResponse = VideoResponse.fromJson(json.decode(response.body));
+              List<String> videoPathsOnServer = videoResponse.filePaths;
+              for (String vp in videoPathsOnServer) {
+                String filename = path.basename(vp);
+                var uriDownload = Uri.http('$_mainNodeIP','/downloads/$_username/$filename');
+                String vpUrl = uriDownload.toString();
+                var _dir = await _localPath;
+                String _localPathFile = _dir+"/$filename";
+                // log('$vpUrl');
+                // log('Local app directory: $_dir');
+                
+                if (!_videoPathsCurrentHole.contains(vpUrl)) {
+                  Provider.of<SweeUser>(context,listen:false).addVideoPathCurrentHole(vpUrl);
+                }
+
+                if (_videoPaths.contains(vpUrl)) { // check if the video has already been downloaded
+                  log('_checkForNewVideos: $vpUrl has already been downloaded'); // If it already exists in SweeUser.videoPaths, that means the video has already been downloaded
+                }
+                else {
+                  // Add the video to the list of all downloaded videos to prevent the next loop of this function from downloading the same video
+                  // This is a hack of sorts since this function isn't a blocking until it complete
+                  // Don't add to the videoPathsLocal until the video is actually downloaded
+                  // This prevents it from being displayed on video_library.dart until it's actually ready
+                  Provider.of<SweeUser>(context,listen:false).addVideoPath(vpUrl); // Add to the list of all videos ever downloaded
+                  try {
+                    await dio.download(uriDownload.toString(),_localPathFile);
+                    Provider.of<SweeUser>(context,listen:false).addVideoPathLocal(_localPathFile); // Add to the list of videos to be displayed on video_library.dart
+                    _saveSharedPrefs(Provider.of<SweeUser>(context,listen:false).videoPaths,Provider.of<SweeUser>(context,listen:false).videoPathsLocal); // Save shared prefs
+                  }
+                  catch (e) {
+                    log('_checkForNewVideos: Something went wrong with a single file download');
+                    try {
+                      // The video download failed, so remove it from the list that you previously added it to
+                      List videoPathsIn = Provider.of<SweeUser>(context,listen:false).videoPaths;
+                      videoPathsIn.removeLast();
+                      Provider.of<SweeUser>(context,listen:false).setVideoPaths(videoPathsIn);
+                    }
+                    catch (e) {
+                      log('_checkForNewVideos: Something went wrong when trying to undo what you did lol');
+                    }
+                  }
+                  log('_checkForNewVideos: Download complete');
+                }
+              }
+            }
+            catch (e) {
+              log('_checkForNewVideos: Something went wrong when trying to download a batch of videos');
+            }  
+          }
+          else {
+            log('_checkForNewVideos: No response: /user/video');
+          }
+        }
+        catch (e) {
+          log('_checkForNewVideos: Something went wrong when trying to get an http response from /user/video');
+        }
+      }
+      else {
+        log('_checkForNewVideos: Not registered');
+      }
+    }
+    else {
+      log('_checkForNewVideos: Not connected to swee');
+    }
+    log(' '); // Print blank line
+  }
+
+  void _showDialogLostConnection() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Swee Connection Lost"),
+          content: Text ("You have been disconnected from the Swee session! You may want to try joining again."),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Dismiss"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<String> get _localPath async {
+    final directory = await getApplicationDocumentsDirectory();
+    return directory.path;
+  }
+
   void _initSharedPrefs() async {
     log('home_screen: _initSharedPrefs');
     final prefs = await SharedPreferences.getInstance();
@@ -93,128 +228,6 @@ class HomePageState extends State<HomePage> {
     log('GetIp returned $deviceIP');
     // Set deviceIP for SweeUser
     Provider.of<SweeUser>(context,listen:false).setDeviceIP(deviceIP);
-  }
-
-  void _checkForNewVideos() async {
-    String _now = new DateTime.now().toString();
-    String _username = Provider.of<SweeUser>(context,listen:true).username;
-    List _videoPaths = Provider.of<SweeUser>(context,listen:true).videoPaths;
-    List _videoPathsCurrentHole = Provider.of<SweeUser>(context,listen:true).videoPathsCurrentHole;
-    String _wifiName = Provider.of<SweeUser>(context,listen:true).wifiName;
-
-    if (_wifiName=='swee') {
-      if (Provider.of<SweeUser>(context,listen:false).isRegistered) {
-        log('_checkForNewVideos: video check for $_username: $_now');
-
-        try {
-          var uriUser = Uri.http('$_mainNodeIP','/user',{'username':_username});
-          var responseUser = await http.get(uriUser);
-
-          if (responseUser.statusCode==204) {
-            log('_checkForNewVideos: Connectivity check... $_username is no longer connected to swee');
-            _showDialogLostConnection();
-            Provider.of<SweeUser>(context,listen:false).setRegistration(false);
-          }
-          else {
-            log('_checkForNewVideos: Connectivity check... $_username is connected to swee');
-          }
-        }
-        catch(e) {
-          log('_checkForNewVideos: Something when wrong when trying to determine user connectivity');
-        }
-
-        log('_checkForNewVideos: current video paths:');
-        for (String fp in _videoPaths) {
-          if (fp.isNotEmpty) {
-            log('  $fp');
-          }
-          else {log('[]');}
-        }
-
-        try {
-          var uri = Uri.http('$_mainNodeIP','/user/video',{'username':_username});
-          var response = await http.get(uri);
-          if (response.statusCode==200) {
-            try {
-              log('_checkForNewVideos: Response received: /users/video');
-              log(response.body);
-              VideoResponse videoResponse = VideoResponse.fromJson(json.decode(response.body));
-              List<String> videoPathsOnServer = videoResponse.filePaths;
-              // Provider.of<SweeUser>(context,listen:false).setVideoPathsCurrentHole(videoPathsOnServer);
-              for (String vp in videoPathsOnServer) {
-                String filename = path.basename(vp);
-                var uriDownload = Uri.http('$_mainNodeIP','/downloads/$_username/$filename');
-                String vpUrl = uriDownload.toString();
-                var _dir = await _localPath;
-                String _localPathFile = _dir+"/$filename";
-                log('$vpUrl');
-                // log('Local app directory: $_dir');
-                
-                if (!_videoPathsCurrentHole.contains(vpUrl)) {
-                  Provider.of<SweeUser>(context,listen:false).addVideoPathCurrentHole(vpUrl);
-                }
-
-                if (_videoPaths.contains(vpUrl)) { // check if the video has already been downloaded
-                  log('_checkForNewVideos: $vpUrl already exists in SweeUser.videoPaths');
-                }
-                else {
-                  try {
-                    await dio.download(uriDownload.toString(),_localPathFile);
-                    Provider.of<SweeUser>(context,listen:false).addVideoPath(vpUrl);
-                    Provider.of<SweeUser>(context,listen:false).addVideoPathLocal(_localPathFile);
-                    _saveSharedPrefs(Provider.of<SweeUser>(context,listen:false).videoPaths,Provider.of<SweeUser>(context,listen:false).videoPathsLocal);
-                  }
-                  catch (e) {
-                    log('_checkForNewVideos: Something went wrong with a single file download');
-                  }
-                  log('_checkForNewVideos: Download complete');
-                }
-              }
-            }
-            catch (e) {
-              log('_checkForNewVideos: Something went wrong when trying to download a batch of videos');
-            }  
-          }
-          else {
-            log('_checkForNewVideos: No response: /user/video');
-          }
-        }
-        catch (e) {
-          log('_checkForNewVideos: Something went wrong when trying to get an http response from /user/video');
-        }
-      }
-      else {
-        log('_checkForNewVideos: Not registered');
-      }
-    }
-    else {
-      log('_checkForNewVideos: Not connected to swee');
-    }
-  }
-
-  void _showDialogLostConnection() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Swee Connection Lost"),
-          content: Text ("You have been disconnected from the Swee session! You may want to try joining again."),
-          actions: <Widget>[
-            FlatButton(
-              child: Text("Dismiss"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    return directory.path;
   }
 
   @override
