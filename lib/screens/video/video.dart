@@ -12,15 +12,18 @@ class VideoPlayerScreen extends StatefulWidget {
   _VideoPlayerScreenState createState() => _VideoPlayerScreenState();
 }
 
-class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+class _VideoPlayerScreenState extends State<VideoPlayerScreen> with TickerProviderStateMixin {
   List<VideoPlayerController> _controllers = [];
   List<Future<void>> _controllersInit = [];
-  // List<String> videos = ["http://192.168.0.174:5001/downloads/alex/20200321-153527.mp4","https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4", "https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4", "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4", "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4"];
+  // List<String> _videos = ["https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4","https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4", "https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4"];
   List<String> _videos = [];
-
+  int _crossAxisCount = 1;
+  double _aspectRatio = 16/9; // TODO: kinda sucks that this is hardcoded. figure out how to get the grid to initialize with the correct aspect ratio?
+  List<AnimationController> _animationControllers = [];
+ 
   @override
   void initState() {
-    _videos = Provider.of<SweeUser>(context,listen:false).videoPathsCurrentHole; // Get this
+    // _videos = Provider.of<SweeUser>(context,listen:false).videoPathsCurrentHole; // Get this
     _initVideoPlayers();
     super.initState();
   }
@@ -30,6 +33,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     // Ensure disposing of the VideoPlayerController to free up resources.
     for (var i = 0; i < _controllers.length; i++) {
       _controllers[i].dispose();
+      _animationControllers[i].dispose();
     } 
     super.dispose();
   }
@@ -43,7 +47,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         onRefresh: _refreshGridView,
         child: GridView.builder(
           itemCount: _controllers.isEmpty? 1:_controllers.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: _controllers.isEmpty? 1:3, crossAxisSpacing: 4.0, mainAxisSpacing: 4.0),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: _controllers.isEmpty? 1:_crossAxisCount,
+            crossAxisSpacing: 4.0,
+            mainAxisSpacing: 4.0,
+            childAspectRatio: _controllers.isEmpty? 1:_aspectRatio,//_controllers[0].value.aspectRatio, // Grab the first aspect ratio, assuming they're all the same anyways
+            ),
           itemBuilder: (BuildContext context, int index){
             if (_controllers.isEmpty) {
               return _returnEmptyGrid();
@@ -72,11 +81,35 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     );
   }
 
+  Center _returnEmptyGrid1() {
+    // Ok, it's not really an empty grid...
+    return Center(
+      child: Column(mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          SizedBox(height:25),
+          Text('Loading Videos'),
+          SizedBox(height:25),
+          Text('Pull Down to Refresh'),
+        ],
+      ),
+    );
+  }
+
   Stack _returnVideoPlayerStack(index) {
-    String thisvid = _videos[index];
-    log('$thisvid');
+    final animation = Tween(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_animationControllers[index]);
+    animation.addStatusListener((status) {
+      if (status==AnimationStatus.completed) {
+        _animationControllers[index].reverse();
+      }
+    });
 
     return Stack(
+      alignment: Alignment.center,
+      fit: StackFit.expand,
       children: <Widget>[
         Center(
           child:FutureBuilder(
@@ -95,36 +128,30 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 return Center(child: CircularProgressIndicator());
               }
             },
-          )  
+          ),
         ),
-        Center(
-          child: ButtonTheme(
-            height: 10.0,
-            minWidth: 10.0,
-            child: RaisedButton(
-              padding: EdgeInsets.all(0.0),
-              color: Colors.transparent,
-              elevation: 0,
-              textColor: Colors.white,
-              onPressed: () {
-                // Wrap the play or pause in a call to `setState`. This ensures the correct icon is shown.
-                setState(() {
-                  if (_controllers[index].value.isPlaying) {
-                    // If the video is playing, pause it.
-                    _controllers[index].pause();
-                  } else {
-                    // If the video is paused, play it.
-                    _controllers[index].play();
-                  }
-                });
-              },
-              child: Icon(
-                _controllers[index].value.isPlaying ? Icons.pause : Icons.play_arrow,
-                size: 120.0,
-              ),
-            )
-          )
-        )
+        FadeTransition(
+          opacity: animation,
+          child: FlatButton(
+            onPressed: () {
+              _animationControllers[index].forward();
+              // Wrap the play or pause in a call to `setState`. This ensures the correct icon is shown.
+              setState(() {
+                if (_controllers[index].value.isPlaying) {
+                  // If the video is playing, pause it.
+                  _controllers[index].pause();
+                } else {
+                  // If the video is paused, play it.
+                  _controllers[index].play();
+                }
+              });
+            },
+            child: Icon(
+              _controllers[index].value.isPlaying ? Icons.play_arrow : Icons.pause,
+              size: 90,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -140,6 +167,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         _controllers.add(VideoPlayerController.network(_videoPath));
         _controllers[i].setLooping(true);
         _controllersInit.add(_controllers[i].initialize());
+
+        _animationControllers.add(
+          AnimationController(
+            vsync: this,
+            duration: Duration(milliseconds: 500),
+          )
+        );
       }
       setState((){}); // Do a setState here so the page will be rebuilt
     }
@@ -150,6 +184,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _controllers = []; // Reset
     _controllersInit = []; // Reset
     _videos = Provider.of<SweeUser>(context,listen:false).videoPathsCurrentHole;
-    _initVideoPlayers(); // Re-initialize video player(s)
+  _initVideoPlayers(); // Re-initialize video player(s)
   }
 }
