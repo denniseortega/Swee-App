@@ -81,21 +81,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> with TickerProvid
     );
   }
 
-  Center _returnEmptyGrid1() {
-    // Ok, it's not really an empty grid...
-    return Center(
-      child: Column(mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          SizedBox(height:25),
-          Text('Loading Videos'),
-          SizedBox(height:25),
-          Text('Pull Down to Refresh'),
-        ],
-      ),
-    );
-  }
-
   Stack _returnVideoPlayerStack(index) {
     final animation = Tween(
       begin: 0.0,

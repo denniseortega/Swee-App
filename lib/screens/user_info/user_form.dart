@@ -15,9 +15,10 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:dio/dio.dart';
-import 'package:image/image.dart' as Im;
+import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'package:exif/exif.dart';
 
 final _user = User(); // Moved this out here, which allows the user info to persist when navigating between screens
 double _imageSize = 175;
@@ -320,9 +321,11 @@ class _UserFormState extends State<UserForm> {
         var request = http.MultipartRequest('POST', uri);
         request.fields['username'] = username;
 
-        // Resize image before upload - helps facenet train faster
-        Im.Image image = Im.decodeImage(File(fp).readAsBytesSync());
-        Im.Image thumbnail = Im.copyResize(image,width:120);
+        // Fix image rotation based on exif data      
+        img.Image imageFixedRotation = await fixExifRotation(fp);
+
+        // Resize image
+        img.Image thumbnail = img.copyResize(imageFixedRotation,width:182);
         String localPath = await _localPath;
         String filename = path.basename(fp);
 
@@ -334,7 +337,7 @@ class _UserFormState extends State<UserForm> {
 
         // Rewrite the resized image
         String fpNew = path.join(localPath, filename);
-        File(fpNew)..writeAsBytesSync(Im.encodePng(thumbnail));
+        File(fpNew)..writeAsBytesSync(img.encodePng(thumbnail));
 
         // Upload
         request.files.add(await http.MultipartFile.fromPath('file', fpNew));
@@ -342,7 +345,7 @@ class _UserFormState extends State<UserForm> {
 
         if (response.statusCode != 500) {
           log('Uploaded image to server: $fp');
-        }
+        } 
       }
     }
     catch (e) {
@@ -471,7 +474,7 @@ class _UserFormState extends State<UserForm> {
                               }
                             }                
                           },
-                          child: !Provider.of<SweeUser>(context,listen:true).isRegistered ? Text('Join Swee Session'):Text('Leave Swee Session'),
+                          child: !Provider.of<SweeUser>(context,listen:true).isRegistered ? Text('Join Swee Session'):Text('Leave Swee Session'), // TODO: move to bottom of screen
                         )
                       ],
                     ),
@@ -652,3 +655,57 @@ class UsersResponse {
     return UsersResponse(users: usersToAdd, nUsers: usersToAdd.length);
   }
 }
+
+
+
+
+
+
+
+
+
+
+Future<img.Image> fixExifRotation(String imagePath) async {
+    final originalFile = File(imagePath);
+    List<int> imageBytes = await originalFile.readAsBytes();
+
+    final originalImage = img.decodeImage(imageBytes);
+
+    final height = originalImage.height;
+    final width = originalImage.width;
+
+    // We'll use the exif package to read exif data
+    // This is map of several exif properties
+    // Let's check 'Image Orientation'
+    final exifData = await readExifFromBytes(imageBytes);
+
+    img.Image fixedImage;
+
+    // TODO I think image rotation is based on a default orientation.
+    // For iPhones, the default image rotation is landscape mode with the forward facing camera on the top-left (i.e. you rotate the phone 90 deg CCW)
+    // For iPads, the default image rotation is portrait mode with the forward facing camera on the top-right (i.e. no rotation of device)
+    // For rotation purposes, iPads already have the correct rotation. iPhones need a +90 deg rotation.
+    if (exifData['Image Model'].printable.contains('iPad')) {
+      log('This is an iPad. No rotation correction necessary.');
+      fixedImage = img.copyRotate(originalImage, 0);
+    } else if (exifData['Image Model'].printable.contains('iPhone')) {
+      log('This is an iPhone. Correcting image rotation.');
+      if (exifData['Image Orientation'].printable.contains('Horizontal')) { // CW landscape
+        fixedImage = img.copyRotate(originalImage, 0);
+      } else if (exifData['Image Orientation'].printable.contains('90 CW')) { // Normal portrait
+        fixedImage = img.copyRotate(originalImage, 90);
+      } else if (exifData['Image Orientation'].printable.contains('180')) { // CCW landscape
+        fixedImage = img.copyRotate(originalImage, 180);
+      } else if (exifData['Image Orientation'].printable.contains('CCW')) { // Upside down portrait
+        fixedImage = img.copyRotate(originalImage, 270);
+      } else {
+        log('Rotation case not recognized.');
+        fixedImage = img.copyRotate(originalImage, 0);
+      }
+    } else {
+      log('Device type not recognized. Do not know what rotation to apply.');
+      fixedImage = img.copyRotate(originalImage, 0);
+    }
+
+    return fixedImage;
+  }

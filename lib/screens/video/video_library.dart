@@ -38,7 +38,7 @@ class VideoLibraryState extends State<VideoLibrary> {
         child: Column(
           children: <Widget>[
             Expanded(
-              child: ListView.separated( // TODO: The same video shows up in the list twice------>I think it is doing this because the next loop of checkForNewVideos is executing while the previous loop is still downloading the video
+              child: ListView.separated(
                 itemCount: Provider.of<SweeUser>(context,listen:true).videoPathsLocal.isEmpty? 1:Provider.of<SweeUser>(context,listen:true).videoPathsLocal.length,
                 separatorBuilder: (BuildContext context, int index) => Divider(),
                 itemBuilder: (BuildContext context,int index){
