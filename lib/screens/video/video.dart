@@ -23,7 +23,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> with TickerProvid
  
   @override
   void initState() {
-    // _videos = Provider.of<SweeUser>(context,listen:false).videoPathsCurrentHole; // Get this
+    _videos = Provider.of<SweeUser>(context,listen:false).videoPathsCurrentHole; // Get this
     _initVideoPlayers();
     super.initState();
   }
@@ -106,7 +106,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> with TickerProvid
                 return AspectRatio(
                   aspectRatio: _controllers[index].value.aspectRatio,
                   // Use the VideoPlayer widget to display the video.
-                  child: VideoPlayer(_controllers[index]),
+                  child: Container(
+                    decoration: BoxDecoration(border: Border.all(color: Colors.black)),
+                    child: VideoPlayer(_controllers[index]),
+                  ),
                 );
               } else {
                 // If the VideoPlayerController is still initializing, show a loading spinner.
@@ -169,6 +172,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> with TickerProvid
     _controllers = []; // Reset
     _controllersInit = []; // Reset
     _videos = Provider.of<SweeUser>(context,listen:false).videoPathsCurrentHole;
-  _initVideoPlayers(); // Re-initialize video player(s)
+    _initVideoPlayers(); // Re-initialize video player(s)
   }
 }

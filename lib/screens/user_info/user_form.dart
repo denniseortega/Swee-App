@@ -43,7 +43,7 @@ class _UserFormState extends State<UserForm> {
   // String _secondaryNodeIP;
   SnackBar _snackBarNoImages = SnackBar(content: Text("No profile images were specified. Please select at least one profile image on the 'User Profile' page."));
   SnackBar _snackBarHttpTimeout = SnackBar(content: Text("A Swee server connection could not be established. Are you connected Swee wifi?"), action: SnackBarAction(label: 'Dismiss',onPressed: () {}));
-  SnackBar _snackBarGoodName = SnackBar(content: Text("Good name!"), action: SnackBarAction(label: 'Dismiss',onPressed: () {}));
+  // SnackBar _snackBarGoodName = SnackBar(content: Text("Good name!"), action: SnackBarAction(label: 'Dismiss',onPressed: () {}));
 
   @override
   void initState() {
@@ -403,7 +403,7 @@ class _UserFormState extends State<UserForm> {
 
   Scaffold _returnScaffold() {
     return Scaffold(
-      appBar: AppBar(title: Text('Profile')),
+      appBar: AppBar(title: Text('User Profile')),
       body: Container(
         padding:
           const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
@@ -535,7 +535,7 @@ class _UserFormState extends State<UserForm> {
                         await registerUser(_username, _deviceIP, _imagePaths);
                         
                         log('Username available!');
-                        Scaffold.of(context).showSnackBar(_snackBarGoodName);
+                        // Scaffold.of(context).showSnackBar(_snackBarGoodName);
                       }
                     }                
                   },
