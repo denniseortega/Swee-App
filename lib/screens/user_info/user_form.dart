@@ -315,6 +315,7 @@ class _UserFormState extends State<UserForm> {
 
   Future<void> uploadImageToServer(String username, List<String> filePaths) async {
     try {
+      int idx = 0;
       var uri = Uri.parse('http://$_mainNodeIP/upload_file');
       // Loop through the list of file paths. Upload them to the server one at a time.
       for (String fp in filePaths) {
@@ -322,7 +323,17 @@ class _UserFormState extends State<UserForm> {
         request.fields['username'] = username;
 
         // Fix image rotation based on exif data      
-        img.Image imageFixedRotation = await fixExifRotation(fp);
+        img.Image imageFixedRotation;
+        try {
+          imageFixedRotation = await fixExifRotation(fp);
+        }
+        catch (e_fixExifRotation) {
+          log('Rotation correction failed (image $idx).'); // Note: Images previously rotated by fixExifRotation may not contain exif rotation data, which may cause fixExifRotation() to fail
+          final originalFile = File(fp);
+          List<int> imageBytes = await originalFile.readAsBytes();
+          final originalImage = img.decodeImage(imageBytes);
+          imageFixedRotation = img.copyRotate(originalImage, 0);
+        }
 
         // Resize image
         img.Image thumbnail = img.copyResize(imageFixedRotation,width:182);
@@ -343,10 +354,16 @@ class _UserFormState extends State<UserForm> {
         request.files.add(await http.MultipartFile.fromPath('file', fpNew));
         var response = await request.send();
 
+
         if (response.statusCode != 500) {
           log('Uploaded image to server: $fp');
         } 
+
+        Provider.of<SweeUser>(context,listen:false).addImagePathRotated(idx, fpNew);
+        idx++;
       }
+
+      
     }
     catch (e) {
       log('Error in uploadImageToServer');
@@ -423,61 +440,6 @@ class _UserFormState extends State<UserForm> {
                       onSaved: (val) =>
                         setState(() => _user.firstName = val),
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        RaisedButton(
-                          onPressed: () async {         
-                            if (Provider.of<SweeUser>(context,listen:false).isRegistered) { // User already registered, so unregister
-                              unregisterUser(Provider.of<SweeUser>(context,listen:false).username,Provider.of<SweeUser>(context,listen:false).deviceIP);
-                            } 
-                            else { // Register user
-                              try {
-                                final response = await http.get(_uriUsers).timeout(Duration(seconds:_httpTimeoutTime)); // TODO: SocketException here that doesn't get caught for some reason? Is this a VSCode issue or an actual issue with the code?
-                                final UsersResponse registeredUserData = UsersResponse.fromJson(json.decode(response.body));
-                                final List<String> registeredUsers = [];
-                                for (UserInfo ui in registeredUserData.users) {
-                                  registeredUsers.add(ui.username);
-                                }
-                              }
-                              on SocketException catch(_) {
-                                log('SocketException');
-                                return;
-                              }
-                              catch (e) {
-                                log('http call to /users timed out after $_httpTimeoutTime second');
-                                Scaffold.of(context).showSnackBar(_snackBarHttpTimeout);
-                                return;
-                              }
-
-                              final form = _formKey.currentState;
-                              if (form.validate()) {
-                                form.save();
-                                _user.save();
-
-                                String _username = _user.firstName;
-                                String _deviceIP = Provider.of<SweeUser>(context,listen:false).deviceIP;
-                                List _imagePaths = Provider.of<SweeUser>(context,listen:false).imagePaths;
-
-                                Provider.of<SweeUser>(context,listen:false).setUsername(_username);
-                                _saveSharedPreferences();
-
-                                if (_deviceIP==null) {
-                                  log('_deviceIP returned null. Why?');
-                                  _deviceIP = await GetIp.ipAddress;
-                                }
-
-                                await registerUser(_username, _deviceIP, _imagePaths);
-                                
-                                log('Username available!');
-                                Scaffold.of(context).showSnackBar(_snackBarGoodName);
-                              }
-                            }                
-                          },
-                          child: !Provider.of<SweeUser>(context,listen:true).isRegistered ? Text('Join Swee Session'):Text('Leave Swee Session'), // TODO: move to bottom of screen
-                        )
-                      ],
-                    ),
                     SizedBox(height:25),
                     AppBar(title: Text('Upload 1-3 Selfies'), backgroundColor: Colors.grey,),
                     SizedBox(height:25),
@@ -526,6 +488,62 @@ class _UserFormState extends State<UserForm> {
               )
             ),
             SizedBox(height:25),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                RaisedButton(
+                  onPressed: () async {         
+                    if (Provider.of<SweeUser>(context,listen:false).isRegistered) { // User already registered, so unregister
+                      unregisterUser(Provider.of<SweeUser>(context,listen:false).username,Provider.of<SweeUser>(context,listen:false).deviceIP);
+                    } 
+                    else { // Register user
+                      try {
+                        final response = await http.get(_uriUsers).timeout(Duration(seconds:_httpTimeoutTime)); // TODO: SocketException here that doesn't get caught for some reason? Is this a VSCode issue or an actual issue with the code?
+                        final UsersResponse registeredUserData = UsersResponse.fromJson(json.decode(response.body));
+                        final List<String> registeredUsers = [];
+                        for (UserInfo ui in registeredUserData.users) {
+                          registeredUsers.add(ui.username);
+                        }
+                      }
+                      on SocketException catch(_) {
+                        log('SocketException');
+                        return;
+                      }
+                      catch (e) {
+                        log('http call to /users timed out after $_httpTimeoutTime second');
+                        Scaffold.of(context).showSnackBar(_snackBarHttpTimeout);
+                        return;
+                      }
+
+                      final form = _formKey.currentState;
+                      if (form.validate()) {
+                        form.save();
+                        _user.save();
+
+                        String _username = _user.firstName;
+                        String _deviceIP = Provider.of<SweeUser>(context,listen:false).deviceIP;
+                        List _imagePaths = Provider.of<SweeUser>(context,listen:false).imagePaths;
+
+                        Provider.of<SweeUser>(context,listen:false).setUsername(_username);
+                        _saveSharedPreferences();
+
+                        if (_deviceIP==null) {
+                          log('_deviceIP returned null. Why?');
+                          _deviceIP = await GetIp.ipAddress;
+                        }
+
+                        await registerUser(_username, _deviceIP, _imagePaths);
+                        
+                        log('Username available!');
+                        Scaffold.of(context).showSnackBar(_snackBarGoodName);
+                      }
+                    }                
+                  },
+                  child: !Provider.of<SweeUser>(context,listen:true).isRegistered ? Text('Join Swee Session'):Text('Leave Swee Session'),
+                )
+              ],
+            ),
+            SizedBox(height:100),
             Center(child: 
               Text('Connection Status: $_connectionStatus')
             ),
@@ -588,6 +606,55 @@ class _UserFormState extends State<UserForm> {
     final key = 'imagePaths';
     final value = Provider.of<SweeUser>(context,listen:false).imagePaths;
     prefs.setStringList(key, value);
+  }
+
+  Future<img.Image> fixExifRotation(String imagePath) async {
+    final originalFile = File(imagePath);
+    List<int> imageBytes = await originalFile.readAsBytes();
+
+    final originalImage = img.decodeImage(imageBytes);
+
+    // final height = originalImage.height;
+    // final width = originalImage.width;
+
+    // We'll use the exif package to read exif data
+    // This is map of several exif properties
+    // Let's check 'Image Orientation'
+    final exifData = await readExifFromBytes(imageBytes);
+
+    img.Image fixedImage;
+
+    // TODO I think image rotation is based on a default orientation.
+    // For iPhones, the default image rotation is landscape mode with the forward facing camera on the top-left (i.e. you rotate the phone 90 deg CCW)
+    // For iPads, the default image rotation is portrait mode with the forward facing camera on the top-right (i.e. no rotation of device)
+    // For rotation purposes, iPads already have the correct rotation. iPhones need a +90 deg rotation.
+    final String imageModel = exifData['Image Model'].printable;
+    if (imageModel.contains('iPhone 11')) {
+      log('This is an iPhone. Correcting image rotation.');
+      if (exifData['Image Orientation'].printable.contains('Horizontal')) { // CW landscape
+        fixedImage = img.copyRotate(originalImage, 0);
+      } else if (exifData['Image Orientation'].printable.contains('90 CW')) { // Normal portrait
+        fixedImage = img.copyRotate(originalImage, 90);
+      } else if (exifData['Image Orientation'].printable.contains('180')) { // CCW landscape
+        fixedImage = img.copyRotate(originalImage, 180);
+      } else if (exifData['Image Orientation'].printable.contains('CCW')) { // Upside down portrait
+        fixedImage = img.copyRotate(originalImage, 270);
+      } else {
+        log('Rotation case not recognized.');
+        fixedImage = img.copyRotate(originalImage, 0);
+      }
+    } else {
+      if (imageModel.contains('iPad')) {
+        log('This is an iPad. No rotation correction necessary.');
+      } else if (imageModel.contains('iPhone X')) {
+        log('This is an iPhone X. No rotation correction necessary.');
+      } else {
+        log('Device type case not recognized. No rotation correction applied.');
+      }
+      fixedImage = img.copyRotate(originalImage, 0);
+    }
+
+    return fixedImage;
   }
 }
 
@@ -655,57 +722,3 @@ class UsersResponse {
     return UsersResponse(users: usersToAdd, nUsers: usersToAdd.length);
   }
 }
-
-
-
-
-
-
-
-
-
-
-Future<img.Image> fixExifRotation(String imagePath) async {
-    final originalFile = File(imagePath);
-    List<int> imageBytes = await originalFile.readAsBytes();
-
-    final originalImage = img.decodeImage(imageBytes);
-
-    final height = originalImage.height;
-    final width = originalImage.width;
-
-    // We'll use the exif package to read exif data
-    // This is map of several exif properties
-    // Let's check 'Image Orientation'
-    final exifData = await readExifFromBytes(imageBytes);
-
-    img.Image fixedImage;
-
-    // TODO I think image rotation is based on a default orientation.
-    // For iPhones, the default image rotation is landscape mode with the forward facing camera on the top-left (i.e. you rotate the phone 90 deg CCW)
-    // For iPads, the default image rotation is portrait mode with the forward facing camera on the top-right (i.e. no rotation of device)
-    // For rotation purposes, iPads already have the correct rotation. iPhones need a +90 deg rotation.
-    if (exifData['Image Model'].printable.contains('iPad')) {
-      log('This is an iPad. No rotation correction necessary.');
-      fixedImage = img.copyRotate(originalImage, 0);
-    } else if (exifData['Image Model'].printable.contains('iPhone')) {
-      log('This is an iPhone. Correcting image rotation.');
-      if (exifData['Image Orientation'].printable.contains('Horizontal')) { // CW landscape
-        fixedImage = img.copyRotate(originalImage, 0);
-      } else if (exifData['Image Orientation'].printable.contains('90 CW')) { // Normal portrait
-        fixedImage = img.copyRotate(originalImage, 90);
-      } else if (exifData['Image Orientation'].printable.contains('180')) { // CCW landscape
-        fixedImage = img.copyRotate(originalImage, 180);
-      } else if (exifData['Image Orientation'].printable.contains('CCW')) { // Upside down portrait
-        fixedImage = img.copyRotate(originalImage, 270);
-      } else {
-        log('Rotation case not recognized.');
-        fixedImage = img.copyRotate(originalImage, 0);
-      }
-    } else {
-      log('Device type not recognized. Do not know what rotation to apply.');
-      fixedImage = img.copyRotate(originalImage, 0);
-    }
-
-    return fixedImage;
-  }

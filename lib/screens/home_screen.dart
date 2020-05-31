@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'user_info/user_form.dart';
+import 'user_info/photo_rotation_test.dart';
 import 'video/video.dart';
 import 'video/video_library.dart';
 import 'dart:async';
@@ -30,6 +31,7 @@ class HomePageState extends State<HomePage> {
     new UserForm(),
     new VideoPlayerScreen(),
     new VideoLibrary(),
+    new PhotoRotationTest(),
   ];
   String _mainNodeIP;
   Dio dio = Dio();
@@ -246,6 +248,7 @@ class HomePageState extends State<HomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.person), title: Text('User Profile')),
           BottomNavigationBarItem(icon: Icon(Icons.videocam), title: Text('Current Hole')),
           BottomNavigationBarItem(icon: Icon(Icons.video_library), title: Text('Video Library')),
+          BottomNavigationBarItem(icon: Icon(Icons.photo_album), title: Text('Image Test')),
           ],
         currentIndex: selectedIndex,
         fixedColor: Colors.deepPurple[300],

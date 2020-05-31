@@ -33,6 +33,7 @@ class SweeUser with ChangeNotifier {
   String username = 'DefaultUsername';
   String deviceIP = 'Default.Device.IP';
   List<String> imagePaths = List.filled(3,'');
+  List<String> imagePathsRotated = List.filled(3,'');
   bool isRegistered = false;
   List<String> videoPaths = []; // *all* videoPaths on the Swee server - used to keep track of which videos have been downloaded already
   List<String> videoPathsLocal = []; // videoPaths of videos that have been downloaded to the phone - used to build the video_library.dart
@@ -58,6 +59,16 @@ class SweeUser with ChangeNotifier {
 
   void setImagePaths(List<String> imagePathsIn) {
     imagePaths = imagePathsIn;
+    notifyListeners();
+  }
+
+  void addImagePathRotated(index,pathRotated) {
+    imagePathsRotated[index]=pathRotated;
+    notifyListeners();
+  }
+
+  void setImagePathsRotated(List<String> imagePathsRotatedIn) {
+    imagePathsRotated = imagePathsRotatedIn;
     notifyListeners();
   }
 
