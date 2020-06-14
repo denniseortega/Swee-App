@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -21,7 +23,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>FDAllFilesDownloadedMessage</key>
 	<string>All files have been downloaded</string>
 	<key>FDMaximumConcurrentTasks</key>
@@ -33,19 +35,30 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>This app does not require Apple Music access.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>This app does not require Calendar access.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Can I use the camera please?</string>
+	<string>This app requires camera access.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>This app does not require Contacts access.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Can I use the device location please?</string>
+	<string>This app requires location access at all times.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Can I use the device location please?</string>
+	<string>This app requires location access when in use.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Can I use the mic please?</string>
+	<string>This app does not require microphone access.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>This app does not require motion access.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Can I use the photo library please?</string>
+	<string>This app requires Photo Library access.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app does not require speech recognition access.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
+		<string>location</string>
 		<string>remote-notification</string>
 	</array>
 	<key>UILaunchStoryboardName</key>

@@ -19,6 +19,7 @@ import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:exif/exif.dart';
+import 'package:background_location/background_location.dart';
 
 final _user = User(); // Moved this out here, which allows the user info to persist when navigating between screens
 double _imageSize = 175;
@@ -45,6 +46,15 @@ class _UserFormState extends State<UserForm> {
   SnackBar _snackBarHttpTimeout = SnackBar(content: Text("A Swee server connection could not be established. Are you connected Swee wifi?"), action: SnackBarAction(label: 'Dismiss',onPressed: () {}));
   // SnackBar _snackBarGoodName = SnackBar(content: Text("Good name!"), action: SnackBarAction(label: 'Dismiss',onPressed: () {}));
 
+
+  String latitude = "waiting...";
+  String longitude = "waiting...";
+  String altitude = "waiting...";
+  String accuracy = "waiting...";
+  String bearing = "waiting...";
+  String speed = "waiting...";
+  String time = "waiting...";
+
   @override
   void initState() {
     _initSharedPreferences();
@@ -59,6 +69,23 @@ class _UserFormState extends State<UserForm> {
     // _secondaryNodeIP = Provider.of<SweeUser>(context,listen:false).secondaryNodeIP;
 
     super.initState();
+
+
+
+
+    BackgroundLocation.startLocationService();
+    BackgroundLocation.getLocationUpdates((location) {
+      setState(() {
+        this.latitude = location.latitude.toString();
+        this.longitude = location.longitude.toString();
+        this.accuracy = location.accuracy.toString();
+        this.altitude = location.altitude.toString();
+        this.bearing = location.bearing.toString();
+        this.speed = location.speed.toString();
+        this.time = DateTime.fromMillisecondsSinceEpoch(location.time.toInt())
+            .toString();
+      });
+    });
   }
 
   @override
@@ -69,6 +96,10 @@ class _UserFormState extends State<UserForm> {
     _timer?.cancel();
 
     super.dispose();
+
+
+
+    BackgroundLocation.stopLocationService();
   }
 
   @override
