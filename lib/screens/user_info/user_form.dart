@@ -70,9 +70,6 @@ class _UserFormState extends State<UserForm> {
 
     super.initState();
 
-
-
-
     BackgroundLocation.startLocationService();
     BackgroundLocation.getLocationUpdates((location) {
       setState(() {
@@ -96,8 +93,6 @@ class _UserFormState extends State<UserForm> {
     _timer?.cancel();
 
     super.dispose();
-
-
 
     BackgroundLocation.stopLocationService();
   }
@@ -393,8 +388,6 @@ class _UserFormState extends State<UserForm> {
         Provider.of<SweeUser>(context,listen:false).addImagePathRotated(idx, fpNew);
         idx++;
       }
-
-      
     }
     catch (e) {
       log('Error in uploadImageToServer');
@@ -451,7 +444,7 @@ class _UserFormState extends State<UserForm> {
                       controller: _lastUsernameController,
                       decoration:
                         InputDecoration(
-                          labelText: 'First name',
+                          labelText: 'First Name',
                           suffixIcon: IconButton(
                             icon: Icon(Icons.clear),
                             onPressed: () {
@@ -468,8 +461,20 @@ class _UserFormState extends State<UserForm> {
                         // }
                         return null;
                       },
-                      onSaved: (val) =>
-                        setState(() => _user.firstName = val),
+                      // onSaved: (val) {
+                      //   setState(() {
+                      //     _user.firstName = val;
+                      //   });
+                      //   // Provider.of<SweeUser>(context,listen:false).setUsername(val);
+                      //   _saveSharedPreferences(); // This will save the shared preferences, and save the username to Provider.of<SweeUser>
+                      // },
+                      onChanged: (val) {
+                        setState(() {
+                          _user.firstName = val;
+                        });
+                        _saveSharedPreferences(); 
+                      },
+                        
                     ),
                     SizedBox(height:25),
                     AppBar(title: Text('Upload 1-3 Selfies'), backgroundColor: Colors.grey,),
@@ -555,8 +560,8 @@ class _UserFormState extends State<UserForm> {
                         String _deviceIP = Provider.of<SweeUser>(context,listen:false).deviceIP;
                         List _imagePaths = Provider.of<SweeUser>(context,listen:false).imagePaths;
 
-                        Provider.of<SweeUser>(context,listen:false).setUsername(_username);
-                        _saveSharedPreferences();
+                        // Provider.of<SweeUser>(context,listen:false).setUsername(_username); <axg> moved to TextFormField onSaved
+                        // _saveSharedPreferences();
 
                         if (_deviceIP==null) {
                           log('_deviceIP returned null. Why?');
