@@ -247,6 +247,7 @@ class _UserFormState extends State<UserForm> {
 
   Future<void> registerUser(String username, String deviceIP, List<String> filePaths) async {
     // Check if user already exists
+    bool readyToRegister = false;
     var uri = Uri.http('$_mainNodeIP','/users');
     var response = await http.get(uri);
     UsersResponse registeredUserData = UsersResponse.fromJson(json.decode(response.body));
@@ -261,20 +262,37 @@ class _UserFormState extends State<UserForm> {
       // If this is true, this username is already registered. Now check if the registered one matches this device's IP. If so, no need to re-register.
       var uri1 = Uri.http('$_mainNodeIP','/user',{'username':'$username'});
       var response1 = await http.get(uri1);
-      Map thisUserData = json.decode(response1.body);
-      UserInfo thisUser = UserInfo.fromJson(thisUserData['data']);
-      if (thisUser.deviceip==Provider.of<SweeUser>(context,listen:false).deviceIP) {
-        SnackBar _snackBarAlreadyRegistered = SnackBar(content: Text("This device ($username, $deviceIP) is already registered with this Swee server."));
-        Scaffold.of(context).showSnackBar(_snackBarAlreadyRegistered);
-        log('registerUser: Already registered');
+      if (response1.body=="") {
+        log('It does not look like there are any registered users.');
       }
       else {
-        SnackBar _snackBarUsernameTaken = SnackBar(content: Text("The username $username is already registered with this Swee server with a different device IP address. Please choose a different username for this device."));
-        Scaffold.of(context).showSnackBar(_snackBarUsernameTaken);
-        log('registerUser: Username taken');
+        Map thisUserData = json.decode(response1.body);
+        UserInfo thisUser = UserInfo.fromJson(thisUserData['data']);
+        if (thisUser.deviceip==deviceIP) {
+          if (Provider.of<SweeUser>(context,listen:false).userResetRequired==true) { // TODO: idk if any of the changes i made to this function on 6/15 actually work lol
+            log('registerUser: Already registered, but userResetRequired==true');
+            await unregisterUser(username,deviceIP, false);
+            readyToRegister = true; // TODO: Assume unregister is successful?
+            Provider.of<SweeUser>(context,listen:false).setUserResetRequired(false); // Reset
+          }
+          else {
+            SnackBar _snackBarAlreadyRegistered = SnackBar(content: Text("This device ($username, $deviceIP) is already registered with this Swee server."));
+            Scaffold.of(context).showSnackBar(_snackBarAlreadyRegistered);
+            log('registerUser: Already registered');
+          }
+        }
+        else {
+          SnackBar _snackBarUsernameTaken = SnackBar(content: Text("The username $username is already registered with this Swee server with a different device IP address. Please choose a different username for this device."));
+          Scaffold.of(context).showSnackBar(_snackBarUsernameTaken);
+          log('registerUser: Username taken');
+        }
       }
     }
     else {
+      readyToRegister = true;
+    }
+  
+    if (readyToRegister) {
       // Create a new, temporary, list without any empty "file paths"
       var filePathsTemp = new List<String>();
       for (String fp in filePaths) {
@@ -311,21 +329,24 @@ class _UserFormState extends State<UserForm> {
     }
   }
 
-  Future<void> unregisterUser(String username, String deviceIP) async {
+  Future<void> unregisterUser(String username, String deviceIP, bool showSnackBar) async {
     // Do something here
     try {
       var uri = Uri.parse('http://$_mainNodeIP/session/leave/$username');
       var response = await http.post(uri);
       if (response.statusCode == 200) log('$username left a Swee session!');
+
+      Provider.of<SweeUser>(context,listen:false).setRegistration(false);
+
+      if (showSnackBar) {
+        SnackBar _snackBarUnregistrationSuccessful = SnackBar(content: Text("User ($username, $deviceIP) unregistration successful!"));
+        Scaffold.of(context).showSnackBar(_snackBarUnregistrationSuccessful);
+      }
+      log('registerUser: $username ($deviceIP) successfully unregistered!');
     }
     catch (_) {
       log('Error in unregisterUser');
     }
-    Provider.of<SweeUser>(context,listen:false).setRegistration(false);
-
-    SnackBar _snackBarUnregistrationSuccessful = SnackBar(content: Text("User ($username, $deviceIP) unregistration successful!"));
-    Scaffold.of(context).showSnackBar(_snackBarUnregistrationSuccessful);
-    log('registerUser: $username ($deviceIP) successfully unregistered!');
   }
 
   Future<void> createUser(String username, String deviceIP) async {
@@ -474,7 +495,6 @@ class _UserFormState extends State<UserForm> {
                         });
                         _saveSharedPreferences(); 
                       },
-                        
                     ),
                     SizedBox(height:25),
                     AppBar(title: Text('Upload 1-3 Selfies'), backgroundColor: Colors.grey,),
@@ -530,7 +550,7 @@ class _UserFormState extends State<UserForm> {
                 RaisedButton(
                   onPressed: () async {         
                     if (Provider.of<SweeUser>(context,listen:false).isRegistered) { // User already registered, so unregister
-                      unregisterUser(Provider.of<SweeUser>(context,listen:false).username,Provider.of<SweeUser>(context,listen:false).deviceIP);
+                      unregisterUser(Provider.of<SweeUser>(context,listen:false).username,Provider.of<SweeUser>(context,listen:false).deviceIP, true);
                     } 
                     else { // Register user
                       try {

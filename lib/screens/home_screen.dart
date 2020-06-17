@@ -151,7 +151,17 @@ class HomePageState extends State<HomePage> {
       }
     }
     else {
-      log('_checkForNewVideos: Not connected to swee');
+      if (Provider.of<SweeUser>(context,listen:false).isRegistered==true) {
+        // The app was previously registered with a Swee session (i.e. was also connected to swee wifi), but the connection has changed
+        // "Unregister" the user on the front end (phone)
+        // The Swee server will automatically unregister the user on the back end (server)
+        Provider.of<SweeUser>(context,listen:false).setRegistration(false);
+        Provider.of<SweeUser>(context,listen:false).setUserResetRequired(true);
+        _showDialogLostConnection_wifi();
+      }
+      else {
+        log('_checkForNewVideos: Not connected to swee');
+      }
     }
     log(' '); // Print blank line
   }
@@ -163,6 +173,27 @@ class HomePageState extends State<HomePage> {
         return AlertDialog(
           title: Text("Swee Connection Lost"),
           content: Text ("You have been disconnected from the Swee session! You may want to try joining again."),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Dismiss"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDialogLostConnection_wifi() {
+    // Use this dialog to notify the user that the device is no longer connected to swee wifi
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Swee Connection Lost"),
+          content: Text ("You have lost your connection to swee wifi! You may want to check your wifi connection and try joining the Swee session again."),
           actions: <Widget>[
             FlatButton(
               child: Text("Dismiss"),
