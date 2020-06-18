@@ -269,17 +269,24 @@ class _UserFormState extends State<UserForm> {
         Map thisUserData = json.decode(response1.body);
         UserInfo thisUser = UserInfo.fromJson(thisUserData['data']);
         if (thisUser.deviceip==deviceIP) {
-          if (Provider.of<SweeUser>(context,listen:false).userResetRequired==true) { // TODO: idk if any of the changes i made to this function on 6/15 actually work lol
-            log('registerUser: Already registered, but userResetRequired==true');
-            await unregisterUser(username,deviceIP, false);
-            readyToRegister = true; // TODO: Assume unregister is successful?
-            Provider.of<SweeUser>(context,listen:false).setUserResetRequired(false); // Reset
-          }
-          else {
-            SnackBar _snackBarAlreadyRegistered = SnackBar(content: Text("This device ($username, $deviceIP) is already registered with this Swee server."));
-            Scaffold.of(context).showSnackBar(_snackBarAlreadyRegistered);
-            log('registerUser: Already registered');
-          }
+          // In this case, the user is STILL REGISTERED on the back end, but the app status does not reflect that... so let's fix that
+          Provider.of<SweeUser>(context,listen:false).setRegistration(true);
+
+
+
+
+          // if (Provider.of<SweeUser>(context,listen:false).userResetRequired==true) { // TODO: idk if any of the changes i made to this function on 6/15 actually work lol
+          //   log('registerUser: Already registered, but userResetRequired==true');
+          //   await unregisterUser(username,deviceIP, false);
+          //   readyToRegister = true; // TODO: Assume unregister is successful?
+          //   Provider.of<SweeUser>(context,listen:false).setUserResetRequired(false); // Reset
+          // }
+          // else {
+          //   SnackBar _snackBarAlreadyRegistered = SnackBar(content: Text("This device ($username, $deviceIP) is already registered with this Swee server."));
+          //   Scaffold.of(context).showSnackBar(_snackBarAlreadyRegistered);
+          //   Provider.of<SweeUser>(context,listen:false).setRegistration(true); // TODO was this a good change? Test it by registering, force closing app, and then trying to join again
+          //   log('registerUser: Already registered');
+          // }
         }
         else {
           SnackBar _snackBarUsernameTaken = SnackBar(content: Text("The username $username is already registered with this Swee server with a different device IP address. Please choose a different username for this device."));
