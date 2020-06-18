@@ -35,6 +35,7 @@ class SweeUser with ChangeNotifier {
   List<String> imagePaths = List.filled(3,'');
   List<String> imagePathsRotated = List.filled(3,'');
   bool isRegistered = false;
+  bool userResetRequired = false;
   List<String> videoPaths = []; // *all* videoPaths on the Swee server - used to keep track of which videos have been downloaded already
   List<String> videoPathsLocal = []; // videoPaths of videos that have been downloaded to the phone - used to build the video_library.dart
   List<String> videoPathsCurrentHole = []; // videoPaths on the Swee server for the *current hole* - used to build video.dart
@@ -119,6 +120,11 @@ class SweeUser with ChangeNotifier {
 
   void setRegistration(registrationStatus) {
     isRegistered = registrationStatus;
+    notifyListeners();
+  }
+
+  void setUserResetRequired(userResetRequiredIn) {
+    userResetRequired = userResetRequiredIn;
     notifyListeners();
   }
 
