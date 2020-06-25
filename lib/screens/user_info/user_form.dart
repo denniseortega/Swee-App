@@ -271,7 +271,7 @@ class _UserFormState extends State<UserForm> {
         if (thisUser.deviceip==deviceIP) {
           // In this case, the user is STILL REGISTERED on the back end, but the app status does not reflect that... so let's fix that
           Provider.of<SweeUser>(context,listen:false).setRegistration(true);
-
+          Scaffold.of(context).showSnackBar(SnackBar(content: Text("Successfully rejoined Swee session!")));
 
 
 
@@ -594,10 +594,16 @@ class _UserFormState extends State<UserForm> {
                           log('_deviceIP returned null. Why?');
                           _deviceIP = await GetIp.ipAddress;
                         }
+                        // else {
+                        //   _deviceIP = await GetIp.ipAddress;
+                        // }
+
+                        // Force connectivity package to update
+                        await initConnectivity();
 
                         await registerUser(_username, _deviceIP, _imagePaths);
                         
-                        log('Username available!');
+                        // log('Username available!');
                         // Scaffold.of(context).showSnackBar(_snackBarGoodName);
                       }
                     }                
